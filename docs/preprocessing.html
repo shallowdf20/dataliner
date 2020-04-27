@@ -1,0 +1,1073 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>preprocessing module &mdash; dataliner  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to dataliner’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> dataliner
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">preprocessing module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">dataliner</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>preprocessing module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/preprocessing.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-preprocessing">
+<span id="preprocessing-module"></span><h1>preprocessing module<a class="headerlink" href="#module-preprocessing" title="Permalink to this headline">¶</a></h1>
+<p>A dataprocessing package for data preprocess and feature engineering.</p>
+<p>This library contains preprocessing methods for data processing
+and feature engineering used during data analysis and machine learning 
+process.</p>
+<p><strong>Classes</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.DropColumns" title="preprocessing.DropColumns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DropColumns</span></code></a>([drop_columns])</p></td>
+<td><p>Simply delete columns specified from input dataframe.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.DropNoVariance" title="preprocessing.DropNoVariance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DropNoVariance</span></code></a>()</p></td>
+<td><p>Delete columns which only have single unique value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.DropHighCardinality" title="preprocessing.DropHighCardinality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DropHighCardinality</span></code></a>([max_categories])</p></td>
+<td><p>Delete columns with high cardinality.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.DropLowAUC" title="preprocessing.DropLowAUC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DropLowAUC</span></code></a>([threshold])</p></td>
+<td><p>Delete columns that have low information to predict target variable.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.DropHighCorrelation" title="preprocessing.DropHighCorrelation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DropHighCorrelation</span></code></a>([threshold])</p></td>
+<td><p>Delete features that are highly correlated to each other.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.ImputeNaN" title="preprocessing.ImputeNaN"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImputeNaN</span></code></a>([cat_strategy, num_strategy])</p></td>
+<td><p>Look for NaN values in the dataframe and impute by    strategy such as mean, median and mode.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.OneHotEncoding" title="preprocessing.OneHotEncoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OneHotEncoding</span></code></a>([drop_first])</p></td>
+<td><p>One Hot Encoding of categorical variables.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.BinarizeNaN" title="preprocessing.BinarizeNaN"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BinarizeNaN</span></code></a>()</p></td>
+<td><p>Find a column with missing values, and create a new    column indicating whether a value was missing (0) or    not (1).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.CountRowNaN" title="preprocessing.CountRowNaN"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountRowNaN</span></code></a>()</p></td>
+<td><p>Calculates total number of NaN in a row and create a new column to store the total.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.StandardizeData" title="preprocessing.StandardizeData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StandardizeData</span></code></a>()</p></td>
+<td><p>Standardize datasets to have mean = 0 and std = 1.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.ClipData" title="preprocessing.ClipData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ClipData</span></code></a>([threshold])</p></td>
+<td><p>Clip datasets by replacing values larger than    the upper bound with upper bound and lower than     the lower bound by lower bound.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.GroupRareCategory" title="preprocessing.GroupRareCategory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GroupRareCategory</span></code></a>([threshold])</p></td>
+<td><p>Replace rare categories that appear in categorical columns    with dummy string.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.TargetMeanEncoding" title="preprocessing.TargetMeanEncoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TargetMeanEncoding</span></code></a>([k, f, smoothing])</p></td>
+<td><p>Target Mean Encoding of categorical variables.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="preprocessing.DropColumns">
+<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">DropColumns</code><span class="sig-paren">(</span><em class="sig-param">drop_columns=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#DropColumns"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.DropColumns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Simply delete columns specified from input dataframe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>drop_columns</strong> (<em>list</em>) – List of feature names which will be droped         from input dataframe. (default=None)</p>
+</dd>
+</dl>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.DropColumns.fit" title="preprocessing.DropColumns.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit transformer by checking X is a pandas DataFrame.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.DropColumns.transform" title="preprocessing.DropColumns.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
+<td><p>Transform X by dropping columns specified in drop_columns</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="preprocessing.DropColumns.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#DropColumns.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.DropColumns.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit transformer by checking X is a pandas DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p></li>
+<li><p><strong>y</strong> (<em>pandas.Series</em>) – Ignored. (default=None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fitted object (self)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="preprocessing.DropColumns.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#DropColumns.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.DropColumns.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform X by dropping columns specified in drop_columns</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Transformed input DataFrame</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="preprocessing.DropNoVariance">
+<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">DropNoVariance</code><a class="reference internal" href="_modules/preprocessing.html#DropNoVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.DropNoVariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Delete columns which only have single unique value.</p>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.DropNoVariance.fit" title="preprocessing.DropNoVariance.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit transformer by deleting column with single unique value.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.DropNoVariance.transform" title="preprocessing.DropNoVariance.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
+<td><p>Transform X by dropping columns specified in drop_columns</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="preprocessing.DropNoVariance.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#DropNoVariance.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.DropNoVariance.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit transformer by deleting column with single unique value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p></li>
+<li><p><strong>y</strong> (<em>pandas.Series</em>) – Ignored. (default=None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fitted object (self)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="preprocessing.DropNoVariance.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#DropNoVariance.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.DropNoVariance.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform X by dropping columns specified in drop_columns</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Transformed input DataFrame</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="preprocessing.DropHighCardinality">
+<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">DropHighCardinality</code><span class="sig-paren">(</span><em class="sig-param">max_categories=50</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#DropHighCardinality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.DropHighCardinality" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Delete columns with high cardinality.
+Basically means dropping column with too many categories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_categories</strong> (<em>int</em>) – Maximum number of categories to be permitted    in a column. If number of categories in a certain column exceeds this value,    that column will be deleted. (default=50)</p>
+</dd>
+</dl>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.DropHighCardinality.fit" title="preprocessing.DropHighCardinality.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit transformer by deleting column with high cardinality.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.DropHighCardinality.transform" title="preprocessing.DropHighCardinality.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
+<td><p>Transform X by dropping columns specified in drop_columns</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="preprocessing.DropHighCardinality.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#DropHighCardinality.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.DropHighCardinality.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit transformer by deleting column with high cardinality.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p></li>
+<li><p><strong>y</strong> (<em>pandas.Series</em>) – Ignored. (default=None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fitted object (self)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="preprocessing.DropHighCardinality.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#DropHighCardinality.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.DropHighCardinality.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform X by dropping columns specified in drop_columns</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Transformed input DataFrame</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="preprocessing.DropLowAUC">
+<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">DropLowAUC</code><span class="sig-paren">(</span><em class="sig-param">threshold=0.51</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#DropLowAUC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.DropLowAUC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Delete columns that have low information to predict target variable.    This class calculate roc_auc by fitting all features in the input    array one by one against target feature using Logistic Regression    and drop features with roc_auc below threshold specified.    Missing values will be replaced by mean and categorical feature     will be converted to dummy variables by one hot encoding with missing    values filled with mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>threshold</strong> (<em>float</em>) – Threshold value for roc_auc. Feature with roc_auc     below this value will be deleted. (default=0.51)</p>
+</dd>
+</dl>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.DropLowAUC.fit" title="preprocessing.DropLowAUC.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit transformer by fitting each feature with Logistic         Regression and storing features with roc_auc less than threshold</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.DropLowAUC.transform" title="preprocessing.DropLowAUC.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
+<td><p>Transform X by dropping columns specified in drop_columns</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="preprocessing.DropLowAUC.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#DropLowAUC.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.DropLowAUC.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit transformer by fitting each feature with Logistic         Regression and storing features with roc_auc less than threshold</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p></li>
+<li><p><strong>y</strong> (<em>pandas.Series</em>) – Input Series for target variable</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fitted object (self)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="preprocessing.DropLowAUC.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#DropLowAUC.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.DropLowAUC.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform X by dropping columns specified in drop_columns</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Transformed input DataFrame</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="preprocessing.DropHighCorrelation">
+<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">DropHighCorrelation</code><span class="sig-paren">(</span><em class="sig-param">threshold=0.95</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#DropHighCorrelation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.DropHighCorrelation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Delete features that are highly correlated to each other.    Best correlated feature against target variable will be    selected from the highly correlated pairs within X.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>threshold</strong> (<em>float</em>) – Threshold value for Pearson’s correlation     coefficient. (default=0.95)</p>
+</dd>
+</dl>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.DropHighCorrelation.fit" title="preprocessing.DropHighCorrelation.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit transformer by identifying highly correlated variable pairs        and dropping one that is less correlated to the target variable.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.DropHighCorrelation.transform" title="preprocessing.DropHighCorrelation.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
+<td><p>Transform X by dropping columns specified in drop_columns</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="preprocessing.DropHighCorrelation.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#DropHighCorrelation.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.DropHighCorrelation.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit transformer by identifying highly correlated variable pairs        and dropping one that is less correlated to the target variable.        Missing values will be imputed by mean.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p></li>
+<li><p><strong>y</strong> (<em>pandas.Series</em>) – Ignored. (default=None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fitted object (self)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="preprocessing.DropHighCorrelation.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#DropHighCorrelation.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.DropHighCorrelation.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform X by dropping columns specified in drop_columns</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Transformed input DataFrame</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="preprocessing.ImputeNaN">
+<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">ImputeNaN</code><span class="sig-paren">(</span><em class="sig-param">cat_strategy='mode'</em>, <em class="sig-param">num_strategy='mean'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#ImputeNaN"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.ImputeNaN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Look for NaN values in the dataframe and impute by    strategy such as mean, median and mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cat_strategy</strong> (<em>string</em>) – Strategy for imputing NaN exist in categorical    columns. If any other string apart from mode is specified, the    NaN will be imputed by fixed string name ImputedNaN. (default=’mode’)</p></li>
+<li><p><strong>num_strategy</strong> (<em>string</em>) – Strategy for imputing NaN exist in numerical    columns. Either mean, median or mode can be specified and if any    other string is specified, mean imputation will be employed. (default=’mean’)</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.ImputeNaN.fit" title="preprocessing.ImputeNaN.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit transformer by identifying numerical and categorical        columns.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.ImputeNaN.transform" title="preprocessing.ImputeNaN.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
+<td><p>Transform X by imputing with values obtained from        fitting stage.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="preprocessing.ImputeNaN.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#ImputeNaN.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.ImputeNaN.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit transformer by identifying numerical and categorical        columns. Then, based on the strategy fit will store the        values used for NaN existing in each columns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p></li>
+<li><p><strong>y</strong> (<em>pandas.Series</em>) – Ignored. (default=None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fitted object (self)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="preprocessing.ImputeNaN.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#ImputeNaN.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.ImputeNaN.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform X by imputing with values obtained from        fitting stage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Transformed input DataFrame</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="preprocessing.OneHotEncoding">
+<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">OneHotEncoding</code><span class="sig-paren">(</span><em class="sig-param">drop_first=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#OneHotEncoding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.OneHotEncoding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>One Hot Encoding of categorical variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>drop_first</strong> (<em>boolean</em>) – Whether to drop first column after one     hot encoding in order to avoid multi-collinearity. (default=True)</p>
+</dd>
+</dl>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.OneHotEncoding.fit" title="preprocessing.OneHotEncoding.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit transformer by getting column names after        one hot encoding.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.OneHotEncoding.transform" title="preprocessing.OneHotEncoding.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
+<td><p>Transform X by one hot encoding.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="preprocessing.OneHotEncoding.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#OneHotEncoding.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.OneHotEncoding.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit transformer by getting column names after        one hot encoding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p></li>
+<li><p><strong>y</strong> (<em>pandas.Series</em>) – Ignored. (default=None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fitted object (self)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="preprocessing.OneHotEncoding.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#OneHotEncoding.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.OneHotEncoding.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform X by one hot encoding. This will drop new columns        in the input and impute with dummy column with all values = 0        for column that has been deleted from fitting stage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Transformed input DataFrame</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="preprocessing.BinarizeNaN">
+<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">BinarizeNaN</code><a class="reference internal" href="_modules/preprocessing.html#BinarizeNaN"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.BinarizeNaN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Find a column with missing values, and create a new    column indicating whether a value was missing (0) or    not (1).</p>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.BinarizeNaN.fit" title="preprocessing.BinarizeNaN.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit transformer by getting column names that        contains NaN</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.BinarizeNaN.transform" title="preprocessing.BinarizeNaN.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
+<td><p>Transform by checking for columns containing NaN value        both during the fitting and transforming stage, then        binalizing NaN to a new column.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="preprocessing.BinarizeNaN.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#BinarizeNaN.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.BinarizeNaN.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit transformer by getting column names that        contains NaN</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p></li>
+<li><p><strong>y</strong> (<em>pandas.Series</em>) – Ignored. (default=None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fitted object (self)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="preprocessing.BinarizeNaN.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#BinarizeNaN.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.BinarizeNaN.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform by checking for columns containing NaN value        both during the fitting and transforming stage, then        binalizing NaN to a new column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Transformed input DataFrame</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="preprocessing.CountRowNaN">
+<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">CountRowNaN</code><a class="reference internal" href="_modules/preprocessing.html#CountRowNaN"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.CountRowNaN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Calculates total number of NaN in a row and create
+a new column to store the total.</p>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.CountRowNaN.fit" title="preprocessing.CountRowNaN.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit transformer by getting column names during fit.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.CountRowNaN.transform" title="preprocessing.CountRowNaN.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
+<td><p>Transform by checking for columns that exists in both        the fitting and transforming stage.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="preprocessing.CountRowNaN.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#CountRowNaN.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.CountRowNaN.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit transformer by getting column names during fit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p></li>
+<li><p><strong>y</strong> (<em>pandas.Series</em>) – Ignored. (default=None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fitted object (self)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="preprocessing.CountRowNaN.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#CountRowNaN.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.CountRowNaN.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform by checking for columns that exists in both        the fitting and transforming stage. Then adds up number of        missing values in row direction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Transformed input DataFrame</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="preprocessing.StandardizeData">
+<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">StandardizeData</code><a class="reference internal" href="_modules/preprocessing.html#StandardizeData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.StandardizeData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Standardize datasets to have mean = 0 and std = 1.    Note this will only standardize numerical data    and ignore missing values during computation.</p>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.StandardizeData.fit" title="preprocessing.StandardizeData.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit transformer to get mean and std for each        numerical features.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.StandardizeData.transform" title="preprocessing.StandardizeData.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
+<td><p>Transform by subtracting mean and dividing by std.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="preprocessing.StandardizeData.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#StandardizeData.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.StandardizeData.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit transformer to get mean and std for each        numerical features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p></li>
+<li><p><strong>y</strong> (<em>pandas.Series</em>) – Ignored. (default=None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fitted object (self)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="preprocessing.StandardizeData.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#StandardizeData.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.StandardizeData.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform by subtracting mean and dividing by std.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Transformed input DataFrame</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="preprocessing.ClipData">
+<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">ClipData</code><span class="sig-paren">(</span><em class="sig-param">threshold=0.99</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#ClipData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.ClipData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Clip datasets by replacing values larger than    the upper bound with upper bound and lower than     the lower bound by lower bound. Missing values will    be ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>threshold</strong> (<em>float</em>) – Threshold value for to define upper and     lower bound. For example, 0.99 will imply upper bound at 99% percentile    annd lower bound at 1% percentile. (default=0.99)</p>
+</dd>
+</dl>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.ClipData.fit" title="preprocessing.ClipData.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit transformer to get upper bound and lower bound for        numerical columns.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.ClipData.transform" title="preprocessing.ClipData.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
+<td><p>Transform by clipping numerical data</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="preprocessing.ClipData.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#ClipData.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.ClipData.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit transformer to get upper bound and lower bound for        numerical columns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p></li>
+<li><p><strong>y</strong> (<em>pandas.Series</em>) – Ignored. (default=None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fitted object (self)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="preprocessing.ClipData.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#ClipData.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.ClipData.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform by clipping numerical data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Transformed input DataFrame</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="preprocessing.GroupRareCategory">
+<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">GroupRareCategory</code><span class="sig-paren">(</span><em class="sig-param">threshold=0.01</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#GroupRareCategory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.GroupRareCategory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Replace rare categories that appear in categorical columns    with dummy string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>threshold</strong> (<em>float</em>) – Threshold value for defining “rare”    category. For example, 0.01 will imply 1% of the total number    of data as “rare”. (default=0.01)</p>
+</dd>
+</dl>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.GroupRareCategory.fit" title="preprocessing.GroupRareCategory.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit transformer to define and store rare categories        to be replaced.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.GroupRareCategory.transform" title="preprocessing.GroupRareCategory.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
+<td><p>Transform by replacing rare category with dummy string.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="preprocessing.GroupRareCategory.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#GroupRareCategory.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.GroupRareCategory.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit transformer to define and store rare categories        to be replaced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p></li>
+<li><p><strong>y</strong> (<em>pandas.Series</em>) – Ignored. (default=None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fitted object (self)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="preprocessing.GroupRareCategory.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#GroupRareCategory.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.GroupRareCategory.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform by replacing rare category with dummy string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Transformed input DataFrame</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="preprocessing.TargetMeanEncoding">
+<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">TargetMeanEncoding</code><span class="sig-paren">(</span><em class="sig-param">k=0</em>, <em class="sig-param">f=1</em>, <em class="sig-param">smoothing=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#TargetMeanEncoding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.TargetMeanEncoding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Target Mean Encoding of categorical variables. Missing    values will be treated as one of the categories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>k</strong> (<em>float</em>) – hyperparameter for sigmoid function (default=0.0)</p></li>
+<li><p><strong>f</strong> (<em>float</em>) – hyperparameter for sigmoid function (default=1.0)</p></li>
+<li><p><strong>smoothing</strong> (<em>float</em>) – Whether to smooth target mean with global mean using    sigmoid function. Do not recommend smoothing=False. (default=0.01)</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.TargetMeanEncoding.fit" title="preprocessing.TargetMeanEncoding.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit transformer to define and store target mean         smoothed target mean for categorical variables.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.TargetMeanEncoding.transform" title="preprocessing.TargetMeanEncoding.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
+<td><p>Transform by replacing categories with smoothed target mean</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="preprocessing.TargetMeanEncoding.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#TargetMeanEncoding.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.TargetMeanEncoding.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit transformer to define and store target mean         smoothed target mean for categorical variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p></li>
+<li><p><strong>y</strong> (<em>pandas.Series</em>) – Input Series for target variable</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fitted object (self)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="preprocessing.TargetMeanEncoding.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#TargetMeanEncoding.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.TargetMeanEncoding.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform by replacing categories with smoothed target mean</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Transformed input DataFrame</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to dataliner’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Author
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
