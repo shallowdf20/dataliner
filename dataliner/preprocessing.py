@@ -330,8 +330,7 @@ class DropHighCorrelation(BaseEstimator, TransformerMixin):
                         self.drop_columns = col
                     else:
                         self.drop_columns = np.append(self.drop_columns, col)
-        if self.drop_columns is not None:
-            self.drop_columns = sorted(set(self.drop_columns))
+
         return self
 
     def transform(self, X):
