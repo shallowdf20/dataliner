@@ -7,6 +7,8 @@ and feature engineering used during data analysis and machine learning
 process.
 """
 
+import warnings
+
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -28,6 +30,9 @@ __all__ = [
     'ClipData',
     'GroupRareCategory',
     'TargetMeanEncoding',
+    'StandardScaling',
+    'MinMaxScaling',
+    'CountEncoding',
 ]
 
 
@@ -527,11 +532,16 @@ class StandardizeData(BaseEstimator, TransformerMixin):
     """
     Standardize datasets to have mean = 0 and std = 1.\
     Note this will only standardize numerical data\
-    and ignore missing values during computation.
+    and ignore missing values during computation.\
+    Deprecated in version 1.1.0 and will be removed in \
+    version 2.0.0. Please use StandardScaling instead.
     """
 
     def __init__(self):
         self.num_columns = None
+        warnings.warn("Deprecated in version 1.1.0 and will be\
+ removed in version 2.0.0. Please use StandardScaling instead."
+, FutureWarning)
 
     def fit(self, X, y=None):
         """
@@ -750,5 +760,160 @@ class TargetMeanEncoding(BaseEstimator, TransformerMixin):
             Xt[col] = Xt[[col]].fillna('_Missing').join(df_map, on=col).drop(col, axis=1)
 
             Xt[col] = Xt[col].fillna(self.global_mean)
+
+        return Xt
+
+
+class StandardScaling(BaseEstimator, TransformerMixin):
+    """
+    Standardize datasets to have mean = 0 and std = 1.\
+    Note this will only standardize numerical data\
+    and ignore missing values during computation.\
+    """
+
+    def __init__(self):
+        self.num_columns = None
+
+    def fit(self, X, y=None):
+        """
+        Fit transformer to get mean and std for each\
+        numerical features.
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Ignored. (default=None)
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_x(X)
+        self.num_columns = X.select_dtypes('number').columns
+        
+        self.dic_mean = {}
+        self.dic_std = {}
+        for col in self.num_columns:
+            self.dic_mean[col] = X[col].mean()
+            self.dic_std[col] = X[col].std()
+        return self
+
+    def transform(self, X):
+        """
+        Transform by subtracting mean and dividing by std.
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        Xt = X.copy()
+        
+        standardize_columns = np.intersect1d(self.num_columns, Xt.columns)
+        for col in standardize_columns:
+            if self.dic_std[col] == 0:
+                pass
+            else:
+                Xt[col] = (Xt[col] - self.dic_mean[col]) / self.dic_std[col]
+        
+        return Xt
+
+
+class MinMaxScaling(BaseEstimator, TransformerMixin):
+    """
+    Rescale the fit data into range between 0 and 1.\
+    Note this will only standardize numerical data\
+    and ignore missing values during computation.\
+    If there are values larger/smaller than fit data in the\
+    transform data, the value will be larger than 1\
+    or less than 0.
+    """
+
+    def __init__(self):
+        self.num_columns = None
+
+    def fit(self, X, y=None):
+        """
+        Fit transformer to get min and max values for each\
+        numerical features.
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Ignored. (default=None)
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_x(X)
+        self.num_columns = X.select_dtypes('number').columns
+        
+        self.dic_min = {}
+        self.dic_max = {}
+        for col in self.num_columns:
+            self.dic_min[col] = X[col].min()
+            self.dic_max[col] = X[col].max()
+        return self
+
+    def transform(self, X):
+        """
+        Transform by subtracting min and dividing by max-min.
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        Xt = X.copy()
+        
+        minmax_columns = np.intersect1d(self.num_columns, Xt.columns)
+        for col in minmax_columns:
+            if self.dic_max[col] == self.dic_min[col]:
+                pass
+            else:
+                Xt[col] = (Xt[col] - self.dic_min[col]) / (
+                        self.dic_max[col] - self.dic_min[col])
+        
+        return Xt
+
+
+class CountEncoding(BaseEstimator, TransformerMixin):
+    """
+    Encode categorical variables by the count of category\
+    within the categorical column.
+    """
+    def __init__(self):
+        self.cat_columns = None
+
+    def fit(self, X, y=None):
+        """
+        Fit transformer to define categorical variables and\
+        obtain occurrence of each categories.
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Ignored. (default=None)
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_x(X)
+        self.cat_columns = X.select_dtypes(exclude='number').columns
+
+        self.dic_counts = {}
+        for col in self.cat_columns:
+            df = pd.concat([X[col], pd.DataFrame(np.zeros(X.shape[0]))],
+                    axis=1).fillna('_Missing').groupby(col, as_index=False)
+            counts = df.count().rename(columns={0:'count'})
+            self.dic_counts[col] = counts
+
+        return self
+
+    def transform(self, X):
+        """
+        Transform by replacing categories with counts
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        Xt = X.copy()
+        
+        encode_columns = np.intersect1d(self.cat_columns, Xt.columns)
+        
+        for col in encode_columns:
+            df_map = self.dic_counts[col].fillna('_Missing').set_index(col)
+            Xt[col] = Xt[[col]].fillna('_Missing').join(df_map, on=col).drop(col, axis=1)
+
+            Xt[col] = Xt[col].fillna(0)
 
         return Xt

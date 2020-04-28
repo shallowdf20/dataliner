@@ -1,10 +1,10 @@
 import sys
-sys.path.append('../')
+sys.path.append('../dataliner')
 
 import numpy as np
 import pandas as pd
 
-import dataliner.preprocessing as dp
+import preprocessing as dp
 
 
 def test_drop_columns():
@@ -220,3 +220,52 @@ def test_target_mean_encoding():
     assert df_trans['Embarked'].mean() == 0.38367351680115463
     assert df.shape[0] == df_trans.shape[0]
     assert df.shape[1] == df_trans.shape[1] + 1
+
+
+def test_standard_scaling():
+    df = pd.read_csv('titanic_train.csv')
+    trans = dp.StandardScaling()
+
+    y = df['Survived']
+    X = df.drop('Survived', axis=1)
+
+    df_trans = trans.fit_transform(df)
+
+    assert df.shape[0] == df_trans.shape[0]
+    assert df.shape[1] == df_trans.shape[1]
+    assert df_trans['PassengerId'][0] == (df['PassengerId'][0]
+            - df['PassengerId'].mean())/df['PassengerId'].std()
+
+    X['Test'] = 0.0
+    Xt = trans.fit_transform(X)
+
+    assert Xt['Test'].unique()[0] == 0
+    assert Xt.isnull().sum().sum() == 866
+
+
+def test_min_max_scaling():
+    df = pd.read_csv('titanic_train.csv')
+    trans = dp.MinMaxScaling()
+
+    y = df['Survived']
+    X = df.drop('Survived', axis=1)
+
+    df_trans = trans.fit_transform(df)
+
+    assert df.shape[0] == df_trans.shape[0]
+    assert df.shape[1] == df_trans.shape[1]
+    assert df_trans['PassengerId'][0] == (
+        (df['PassengerId'][0] - df['PassengerId'].min()) /
+        (df['PassengerId'].max() - df['PassengerId'].min())
+        )
+    assert df_trans['PassengerId'].mean() == 0.499999999999997
+    assert df_trans['Age'].mean() == 0.36792055349407926
+    assert df_trans['Fare'].mean() == 0.06285842768394748
+    assert df_trans['Pclass'].mean() == 0.654320987654321
+
+
+    X['Test'] = 0.0
+    Xt = trans.fit_transform(X)
+
+    assert Xt['Test'].unique()[0] == 0
+
