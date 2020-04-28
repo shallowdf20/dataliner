@@ -36,7 +36,7 @@ process.fit_transform(X, y)
 ```
 
 ## Documentation
-https://dataliner.readthedocs.io/en/latest/
+https://shallowdf20.github.io/dataliner/preprocessing.html
 
 ## What to expect in next version (1.1):
 - Specifying columns to apply each preprocess
