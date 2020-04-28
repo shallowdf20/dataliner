@@ -22,6 +22,9 @@ def test_drop_columns():
         for col in drop_columns:
             assert col not in df_trans.columns
         assert df.shape[0] == df_trans.shape[0]
+        
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
 
 
 def test_drop_no_variance():
@@ -36,6 +39,9 @@ def test_drop_no_variance():
     assert 'Test_0' not in df_trans.columns
     assert 'Test_1' not in df_trans.columns
     assert df.shape[0] == df_trans.shape[0]
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
 
 
 def test_drop_high_cardinality():
@@ -52,6 +58,9 @@ def test_drop_high_cardinality():
     
     assert df_trans.shape[1] == 2
     assert df.shape[0] == df_trans.shape[0]
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
 
 
 def test_drop_low_auc():
@@ -73,6 +82,9 @@ def test_drop_low_auc():
 
     assert df_trans.columns[0] == 'Sex'
     assert df.shape[0] == df_trans.shape[0]
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
 
 
 def test_drop_high_correlation():
@@ -91,6 +103,9 @@ def test_drop_high_correlation():
 
     assert X_trans.shape[1] == 10
     assert X.shape[0] == X_trans.shape[0]
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
 
 
 def test_impute_nan():
@@ -101,6 +116,9 @@ def test_impute_nan():
 
     assert df_trans.isnull().sum().sum() == 0
     assert df.shape[0] == df_trans.shape[0]
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
 
 
 def test_one_hot_encoding():
@@ -114,6 +132,9 @@ def test_one_hot_encoding():
 
     assert df_trans.shape[1] == 1726
     assert df.shape[0] == df_trans.shape[0]
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
 
 
 def test_binalize_nan():
@@ -129,6 +150,9 @@ def test_binalize_nan():
     assert df['Cabin'].isna().sum() == df_trans['Cabin_NaNFlag'].sum()
     assert df['Embarked'].isna().sum() == df_trans['Embarked_NaNFlag'].sum()
     assert df.shape[0] == df_trans.shape[0]
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
 
 
 def test_count_row_nan():
@@ -142,6 +166,9 @@ def test_count_row_nan():
 
     assert df.isna().sum().sum() == df_trans['NaN_Totals'].sum()
     assert df.shape[0] == df_trans.shape[0]
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
 
 
 def test_standardize_data():
@@ -162,6 +189,9 @@ def test_standardize_data():
     Xt = trans.fit_transform(X)
 
     assert Xt['Test'].unique()[0] == 0
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
 
 
 def test_clip_data():
@@ -181,6 +211,9 @@ def test_clip_data():
         assert df_trans[feature].dropna().max() == upperbound
     assert df.shape[0] == df_trans.shape[0]
     assert df.shape[1] == df_trans.shape[1]
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
 
 
 def test_group_rare_category():
@@ -202,6 +235,9 @@ def test_group_rare_category():
     assert df.shape[0] == df_trans.shape[0]
     assert df.shape[1] == df_trans.shape[1]
     assert dummy_string == 'RareCategory'
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
 
 
 def test_target_mean_encoding():
@@ -220,6 +256,9 @@ def test_target_mean_encoding():
     assert df_trans['Embarked'].mean() == 0.38367351680115463
     assert df.shape[0] == df_trans.shape[0]
     assert df.shape[1] == df_trans.shape[1] + 1
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
 
 
 def test_standard_scaling():
@@ -241,6 +280,9 @@ def test_standard_scaling():
 
     assert Xt['Test'].unique()[0] == 0
     assert Xt.isnull().sum().sum() == 866
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
 
 
 def test_min_max_scaling():
@@ -268,4 +310,174 @@ def test_min_max_scaling():
     Xt = trans.fit_transform(X)
 
     assert Xt['Test'].unique()[0] == 0
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
 
+
+def test_count_encoding():
+    df = pd.read_csv('titanic_train.csv')
+    trans = dp.CountEncoding()
+
+    df_trans = trans.fit_transform(df)
+
+    assert df.shape[0] == df_trans.shape[0]
+    assert df.shape[1] == df_trans.shape[1]
+
+    assert df_trans['Sex'][0] == 577
+    assert df_trans['Embarked'][0] == 644
+    assert df_trans['Cabin'][0] == 687
+
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
+
+
+def test_ranked_count_encoding():
+    df = pd.read_csv('titanic_train.csv')
+    trans = dp.RankedCountEncoding()
+
+    df_trans = trans.fit_transform(df)
+
+    assert df.shape[0] == df_trans.shape[0]
+    assert df.shape[1] == df_trans.shape[1]
+
+    assert (df_trans.groupby('Embarked').count()['PassengerId'].tolist()
+            == [644, 168, 77, 2])
+    assert (df_trans.groupby('Sex').count()['PassengerId'].tolist()
+            == [577, 314])
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
+
+
+def test_frequency_encoding():
+    df = pd.read_csv('titanic_train.csv')
+    trans = dp.FrequencyEncoding()
+
+    df_trans = trans.fit_transform(df)
+
+    assert df.shape[0] == df_trans.shape[0]
+    assert df.shape[1] == df_trans.shape[1]
+
+    assert df_trans['Sex'].unique().tolist() == [
+            0.6475869809203143,
+            0.35241301907968575]
+    assert df_trans['Embarked'].unique().tolist() == [
+            0.7227833894500562,
+            0.18855218855218855,
+            0.08641975308641975,
+            0.002244668911335578]
+    assert df_trans['Cabin'].unique().tolist() == [
+            0.7710437710437711,
+            0.001122334455667789,
+            0.002244668911335578,
+            0.004489337822671156,
+            0.003367003367003367]
+
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
+
+
+def test_ranked_target_mean_encoding():
+    df = pd.read_csv('titanic_train.csv')
+    trans = dp.RankedTargetMeanEncoding()
+
+    y = df['Survived']
+    X = df.drop('Survived', axis=1)
+
+    Xt = trans.fit_transform(X, y)
+
+    assert X.shape[0] == Xt.shape[0]
+    assert X.shape[1] == Xt.shape[1]
+
+    assert Xt['Embarked'].mean() == 3.529741863075196
+    assert Xt['Sex'].mean() == 1.6475869809203143
+    assert Xt['Cabin'].mean() == 126.05387205387206
+
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(X_test)
+
+
+def test_append_anomaly_score():
+    df = pd.read_csv('titanic_train.csv')
+    col_y = 'Survived'
+
+    X_train = df.drop(col_y, axis=1)
+    y_train = df[col_y]
+
+    trans2 = dp.RankedTargetMeanEncoding()
+    trans = dp.AppendAnomalyScore()
+
+    Xt_train = trans2.fit_transform(X_train, y_train)
+    Xt_train = trans.fit_transform(Xt_train.fillna(0))
+
+    assert Xt_train['Anomaly_Score'].mean() == 0.024687907895391693
+    assert X_train.shape[0] == Xt_train.shape[0]
+    assert X_train.shape[1] == Xt_train.shape[1] - 1
+
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform((trans2.transform(X_test.fillna(0))))
+
+def test_append_cluster():
+    df = pd.read_csv('titanic_train.csv')
+    col_y = 'Survived'
+
+    X_train = df.drop(col_y, axis=1)
+    y_train = df[col_y]
+
+    trans2 = dp.RankedTargetMeanEncoding()
+    trans = dp.AppendCluster()
+
+    Xt_train = trans2.fit_transform(X_train, y_train)
+    Xt_train = trans.fit_transform(Xt_train.fillna(0))
+
+    assert Xt_train['Cluster_Number'].mean() == 3.2435465768799103
+    assert X_train.shape[0] == Xt_train.shape[0]
+    assert X_train.shape[1] == Xt_train.shape[1] - 1
+
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform((trans2.transform(X_test.fillna(0))))
+
+
+def test_append_cluster_distance():
+    df = pd.read_csv('titanic_train.csv')
+    col_y = 'Survived'
+
+    X_train = df.drop(col_y, axis=1)
+    y_train = df[col_y]
+
+    trans2 = dp.RankedTargetMeanEncoding()
+    trans = dp.AppendClusterDistance()
+
+    Xt_train = trans2.fit_transform(X_train, y_train)
+    Xt_train = trans.fit_transform(Xt_train.fillna(0))
+
+    assert Xt_train['Cluster_Distance_0'].mean() == 530.2754787693156
+    assert X_train.shape[0] == Xt_train.shape[0]
+    assert X_train.shape[1] == Xt_train.shape[1] - 8
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform((trans2.transform(X_test.fillna(0))))
+
+
+def test_append_principal_component():
+    df = pd.read_csv('titanic_train.csv')
+    col_y = 'Survived'
+
+    X_train = df.drop(col_y, axis=1)
+    y_train = df[col_y]
+
+    trans2 = dp.RankedTargetMeanEncoding()
+    trans3 = dp.StandardScaling()
+    trans = dp.AppendPrincipalComponent()
+
+    Xt_train = trans2.fit_transform(X_train, y_train)
+    Xt_train = trans3.fit_transform(Xt_train, y_train)
+    Xt_train = trans.fit_transform(Xt_train.fillna(0))
+
+    assert Xt_train['Principal_Component_0'].max() == 7.497300874940136
+    assert X_train.shape[0] == Xt_train.shape[0]
+    assert X_train.shape[1] == Xt_train.shape[1] - 5
+    
+    X_test = pd.read_csv('titanic_test.csv')
+    trans.transform(trans3.transform(trans2.transform(X_test.fillna(0))))

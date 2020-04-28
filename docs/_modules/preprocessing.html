@@ -153,9 +153,14 @@
 <span class="sd">process.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">warnings</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
+<span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">KMeans</span>
+<span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
+<span class="kn">from</span> <span class="nn">sklearn.ensemble</span> <span class="kn">import</span> <span class="n">IsolationForest</span>
 <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">cross_val_score</span><span class="p">,</span> <span class="n">StratifiedKFold</span>
 <span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LogisticRegression</span>
 
@@ -174,6 +179,16 @@
     <span class="s1">&#39;ClipData&#39;</span><span class="p">,</span>
     <span class="s1">&#39;GroupRareCategory&#39;</span><span class="p">,</span>
     <span class="s1">&#39;TargetMeanEncoding&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;StandardScaling&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MinMaxScaling&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;CountEncoding&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RankedCountEncoding&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;FrequencyEncoding&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RankedTargetMeanEncoding&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;AppendAnomalyScore&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;AppendCluster&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;AppendClusterDistance&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;AppendPrincipalComponent&#39;</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -189,6 +204,21 @@
         <span class="k">pass</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Input y is not a pandas Series.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_check_duplicate</span><span class="p">(</span><span class="n">list_</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">list_</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_check_fit</span><span class="p">(</span><span class="n">list1</span><span class="p">,</span> <span class="n">list2</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">list1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">list2</span><span class="p">):</span>
+        <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">_check_duplicate</span><span class="p">(</span><span class="n">list1</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_check_duplicate</span><span class="p">(</span><span class="n">list2</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;There are features with duplicate name.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Columns are different from when fitted. For</span><span class="se">\</span>
+<span class="s2">                preprocess with model transforming such as Isolation</span><span class="se">\</span>
+<span class="s2">                Forest or KMeans, require the columns to be same.&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="DropColumns"><a class="viewcode-back" href="../preprocessing.html#preprocessing.DropColumns">[docs]</a><span class="k">class</span> <span class="nc">DropColumns</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
@@ -622,10 +652,10 @@
         <span class="n">new_nan_info</span> <span class="o">=</span> <span class="n">Xt</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
         <span class="n">new_nan_columns</span> <span class="o">=</span> <span class="n">new_nan_info</span><span class="p">[</span><span class="n">new_nan_info</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
 
-        <span class="n">binalize_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nan_columns</span><span class="p">,</span> <span class="n">new_nan_columns</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">binalize_columns</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nan_columns</span><span class="p">,</span> <span class="n">new_nan_columns</span><span class="p">):</span>
             <span class="n">Xt</span><span class="p">[</span><span class="n">col</span> <span class="o">+</span> <span class="s1">&#39;_NaNFlag&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">x</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">setdiff1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nan_columns</span><span class="p">,</span> <span class="n">new_nan_columns</span><span class="p">):</span>
+            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span> <span class="o">+</span> <span class="s1">&#39;_NaNFlag&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="k">return</span> <span class="n">Xt</span></div></div>
 
@@ -673,11 +703,16 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Standardize datasets to have mean = 0 and std = 1.\</span>
 <span class="sd">    Note this will only standardize numerical data\</span>
-<span class="sd">    and ignore missing values during computation.</span>
+<span class="sd">    and ignore missing values during computation.\</span>
+<span class="sd">    Deprecated in version 1.1.0 and will be removed in \</span>
+<span class="sd">    version 1.3.0. Please use StandardScaling instead.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated in version 1.1.0 and will be</span><span class="se">\</span>
+<span class="s2"> removed in version 1.3.0. Please use StandardScaling instead.&quot;</span>
+<span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
 
 <div class="viewcode-block" id="StandardizeData.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.StandardizeData.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -896,6 +931,546 @@
             <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df_map</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
             <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_mean</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Xt</span></div></div>
+
+
+<div class="viewcode-block" id="StandardScaling"><a class="viewcode-back" href="../preprocessing.html#preprocessing.StandardScaling">[docs]</a><span class="k">class</span> <span class="nc">StandardScaling</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Standardize datasets to have mean = 0 and std = 1.\</span>
+<span class="sd">    Note this will only standardize numerical data\</span>
+<span class="sd">    and ignore missing values during computation.\</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="StandardScaling.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.StandardScaling.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit transformer to get mean and std for each\</span>
+<span class="sd">        numerical features.</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :param pandas.Series y: Ignored. (default=None)</span>
+<span class="sd">        :return: fitted object (self)</span>
+<span class="sd">        :rtype: object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_std</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_std</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="StandardScaling.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.StandardScaling.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transform by subtracting mean and dividing by std.</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :return: Transformed input DataFrame</span>
+<span class="sd">        :rtype: pandas.DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="n">standardize_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">standardize_columns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_std</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean</span><span class="p">[</span><span class="n">col</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_std</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
+        
+        <span class="k">return</span> <span class="n">Xt</span></div></div>
+
+
+<div class="viewcode-block" id="MinMaxScaling"><a class="viewcode-back" href="../preprocessing.html#preprocessing.MinMaxScaling">[docs]</a><span class="k">class</span> <span class="nc">MinMaxScaling</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rescale the fit data into range between 0 and 1.\</span>
+<span class="sd">    Note this will only standardize numerical data\</span>
+<span class="sd">    and ignore missing values during computation.\</span>
+<span class="sd">    If there are values larger/smaller than fit data in the\</span>
+<span class="sd">    transform data, the value will be larger than 1\</span>
+<span class="sd">    or less than 0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="MinMaxScaling.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.MinMaxScaling.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit transformer to get min and max values for each\</span>
+<span class="sd">        numerical features.</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :param pandas.Series y: Ignored. (default=None)</span>
+<span class="sd">        :return: fitted object (self)</span>
+<span class="sd">        :rtype: object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_min</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_max</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_min</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_max</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="MinMaxScaling.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.MinMaxScaling.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transform by subtracting min and dividing by max-min.</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :return: Transformed input DataFrame</span>
+<span class="sd">        :rtype: pandas.DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="n">minmax_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">minmax_columns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_max</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_min</span><span class="p">[</span><span class="n">col</span><span class="p">]:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_min</span><span class="p">[</span><span class="n">col</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">dic_max</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_min</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
+        
+        <span class="k">return</span> <span class="n">Xt</span></div></div>
+
+
+<div class="viewcode-block" id="CountEncoding"><a class="viewcode-back" href="../preprocessing.html#preprocessing.CountEncoding">[docs]</a><span class="k">class</span> <span class="nc">CountEncoding</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Encode categorical variables by the count of category\</span>
+<span class="sd">    within the categorical column.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="CountEncoding.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.CountEncoding.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit transformer to define categorical variables and\</span>
+<span class="sd">        obtain occurrence of each categories.</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :param pandas.Series y: Ignored. (default=None)</span>
+<span class="sd">        :return: fitted object (self)</span>
+<span class="sd">        :rtype: object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_counts</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))],</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="s1">&#39;count&#39;</span><span class="p">})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_counts</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="CountEncoding.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.CountEncoding.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transform by replacing categories with counts</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :return: Transformed input DataFrame</span>
+<span class="sd">        :rtype: pandas.DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="n">encode_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">encode_columns</span><span class="p">:</span>
+            <span class="n">df_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_counts</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df_map</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Xt</span></div></div>
+
+
+<div class="viewcode-block" id="RankedCountEncoding"><a class="viewcode-back" href="../preprocessing.html#preprocessing.RankedCountEncoding">[docs]</a><span class="k">class</span> <span class="nc">RankedCountEncoding</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Firstly encode categorical variables by the count of category\</span>
+<span class="sd">    within the categorical column. Then, counts are ranked in\</span>
+<span class="sd">    descending order and the ranks are used to encode category\</span>
+<span class="sd">    columns. Even in case there are categories with same counts,\</span>
+<span class="sd">    ranking will be based on the index and therefore the\</span>
+<span class="sd">    categories will be distinguished. RankedFrequencyEncoding\</span>
+<span class="sd">    is not provided as the result will be identical to this class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="RankedCountEncoding.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.RankedCountEncoding.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit transformer to define categorical variables and\</span>
+<span class="sd">        obtain ranking of category counts.</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :param pandas.Series y: Ignored. (default=None)</span>
+<span class="sd">        :return: fitted object (self)</span>
+<span class="sd">        :rtype: object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_ranks</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">:</span>
+            <span class="n">df_rank</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+            <span class="n">df_rank</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Rank&#39;</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="s1">&#39;Counts&#39;</span><span class="p">]</span>
+            <span class="n">df_rank</span><span class="p">[</span><span class="s1">&#39;Rank&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">df_rank</span> <span class="o">=</span> <span class="n">df_rank</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_ranks</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_rank</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="RankedCountEncoding.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.RankedCountEncoding.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transform by replacing categories with ranks</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :return: Transformed input DataFrame</span>
+<span class="sd">        :rtype: pandas.DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="n">encode_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">encode_columns</span><span class="p">:</span>
+            <span class="n">df_rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_ranks</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
+            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df_rank</span><span class="p">,</span>
+                    <span class="n">on</span><span class="o">=</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">col</span><span class="p">,</span> <span class="s1">&#39;Counts&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">df_rank</span><span class="p">[</span><span class="s1">&#39;Rank&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Xt</span></div></div>
+
+
+<div class="viewcode-block" id="FrequencyEncoding"><a class="viewcode-back" href="../preprocessing.html#preprocessing.FrequencyEncoding">[docs]</a><span class="k">class</span> <span class="nc">FrequencyEncoding</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Encode categorical variables by the frequency of category\</span>
+<span class="sd">    within the categorical column.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="FrequencyEncoding.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.FrequencyEncoding.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit transformer to define categorical variables and\</span>
+<span class="sd">        obtain frequency of each categories.</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :param pandas.Series y: Ignored. (default=None)</span>
+<span class="sd">        :return: fitted object (self)</span>
+<span class="sd">        :rtype: object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_freq</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))],</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">df_count</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+            <span class="n">df_count</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span><span class="p">,</span> <span class="s1">&#39;Frequency&#39;</span><span class="p">]</span>
+            <span class="n">df_count</span><span class="p">[</span><span class="s1">&#39;Frequency&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_count</span><span class="p">[[</span><span class="s1">&#39;Frequency&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">/</span> <span class="n">x</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_freq</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_count</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="FrequencyEncoding.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.FrequencyEncoding.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transform by replacing categories with frequency</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :return: Transformed input DataFrame</span>
+<span class="sd">        :rtype: pandas.DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="n">encode_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">encode_columns</span><span class="p">:</span>
+            <span class="n">df_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_freq</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df_map</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Xt</span></div></div>
+
+
+<div class="viewcode-block" id="RankedTargetMeanEncoding"><a class="viewcode-back" href="../preprocessing.html#preprocessing.RankedTargetMeanEncoding">[docs]</a><span class="k">class</span> <span class="nc">RankedTargetMeanEncoding</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ranking with Target Mean Encoding of categorical variables. Missing\</span>
+<span class="sd">    values will be treated as one of the categories. This will treat\</span>
+<span class="sd">    Categories with same target mean separately as the rank is obtained\</span>
+<span class="sd">    from index once sorted by target mean.</span>
+
+<span class="sd">    :param float k: hyperparameter for sigmoid function (default=0.0)</span>
+<span class="sd">    :param float f: hyperparameter for sigmoid function (default=1.0)</span>
+<span class="sd">    :param float smoothing: Whether to smooth target mean with global mean using\</span>
+<span class="sd">    sigmoid function. Do not recommend smoothing=False. (default=0.01)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">k</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">smoothing</span> <span class="o">=</span> <span class="n">smoothing</span>
+    
+    <span class="k">def</span> <span class="nf">_sigmoid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="p">(</span><span class="n">count</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span> <span class="o">/</span> <span class="n">f</span><span class="p">))</span>
+
+<div class="viewcode-block" id="RankedTargetMeanEncoding.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.RankedTargetMeanEncoding.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit transformer to define and store target mean \</span>
+<span class="sd">        smoothed target mean for categorical variables.\</span>
+<span class="sd">        Then, ranking is created based on target mean.</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :param pandas.Series y: Input Series for target variable</span>
+<span class="sd">        :return: fitted object (self)</span>
+<span class="sd">        :rtype: object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">_check_y</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">global_mean</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">global_mean</span> <span class="o">=</span> <span class="n">global_mean</span>
+        <span class="n">sigmoid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sigmoid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_target_mean</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">y</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">local_means</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">target</span><span class="p">:</span><span class="s1">&#39;target_mean&#39;</span><span class="p">})</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">target</span><span class="p">:</span><span class="s1">&#39;count&#39;</span><span class="p">})</span>
+
+            <span class="n">df_summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">local_means</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">col</span><span class="p">)</span>
+            <span class="n">lambda_</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">df_summary</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="n">df_summary</span><span class="p">[</span><span class="s1">&#39;smoothed_target_mean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lambda_</span> <span class="o">*</span> <span class="n">df_summary</span><span class="p">[</span>
+                    <span class="s1">&#39;target_mean&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">lambda_</span><span class="p">)</span> <span class="o">*</span> <span class="n">global_mean</span>
+            <span class="n">df_summary</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_summary</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="s1">&#39;smoothed_target_mean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">global_mean</span>
+            
+            <span class="n">df_summary</span> <span class="o">=</span> <span class="n">df_summary</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;smoothed_target_mean&#39;</span>
+                    <span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+            <span class="n">df_summary</span> <span class="o">=</span> <span class="n">df_summary</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;index&#39;</span><span class="p">:</span><span class="s1">&#39;Rank&#39;</span><span class="p">})</span>
+            <span class="n">df_summary</span><span class="p">[</span><span class="s1">&#39;Rank&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_target_mean</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_summary</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="RankedTargetMeanEncoding.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.RankedTargetMeanEncoding.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transform by replacing categories with rank</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :return: Transformed input DataFrame</span>
+<span class="sd">        :rtype: pandas.DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="n">encode_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">encode_columns</span><span class="p">:</span>
+            <span class="n">df_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_target_mean</span><span class="p">[</span><span class="n">col</span><span class="p">][[</span><span class="n">col</span><span class="p">,</span>
+                    <span class="s1">&#39;Rank&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df_map</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_mean</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Xt</span></div></div>
+
+
+<div class="viewcode-block" id="AppendAnomalyScore"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendAnomalyScore">[docs]</a><span class="k">class</span> <span class="nc">AppendAnomalyScore</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Append anomaly score calculated from isolation forest.\</span>
+<span class="sd">    Since IsolationForest needs to be fitted, category columns must\</span>
+<span class="sd">    first be encoded to numerical values.</span>
+
+<span class="sd">    :param int n_estimators: Number of base estimators in the \</span>
+<span class="sd">        Isolation Forest ensemble. (default=100)</span>
+<span class="sd">    :param int random_state: random_state for Isolation Forest \</span>
+<span class="sd">        (default=1234)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_estimators</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1234</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">IsolationForest</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="n">n_estimators</span><span class="p">,</span>
+                                     <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AppendAnomalyScore.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendAnomalyScore.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit Isolation Forest</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :param pandas.Series y: Ignored. (default=None)</span>
+<span class="sd">        :return: fitted object (self)</span>
+<span class="sd">        :rtype: object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="AppendAnomalyScore.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendAnomalyScore.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transform X by appending anomaly score</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :return: Transformed input DataFrame</span>
+<span class="sd">        :rtype: pandas.DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">_check_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">Xt</span><span class="p">[</span><span class="s1">&#39;Anomaly_Score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">Xt</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Xt</span></div></div>
+
+
+<div class="viewcode-block" id="AppendCluster"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendCluster">[docs]</a><span class="k">class</span> <span class="nc">AppendCluster</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Append cluster number obtained from kmeans++ clustering.\</span>
+<span class="sd">    For clustering categorical variables need to be converted\</span>
+<span class="sd">    to numerical data.</span>
+
+<span class="sd">    :param int n_clusters: Number of clusters (default=8)</span>
+<span class="sd">    :param int random_state: random_state for KMeans \</span>
+<span class="sd">        (default=1234)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_clusters</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1234</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">,</span>
+                            <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AppendCluster.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendCluster.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit KMeans Clustering</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :param pandas.Series y: Ignored. (default=None)</span>
+<span class="sd">        :return: fitted object (self)</span>
+<span class="sd">        :rtype: object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="AppendCluster.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendCluster.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transform X by appending cluster number</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :return: Transformed input DataFrame</span>
+<span class="sd">        :rtype: pandas.DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">_check_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">Xt</span><span class="p">[</span><span class="s1">&#39;Cluster_Number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Xt</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Xt</span></div></div>
+
+
+<div class="viewcode-block" id="AppendClusterDistance"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendClusterDistance">[docs]</a><span class="k">class</span> <span class="nc">AppendClusterDistance</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Append cluster distance obtained from kmeans++ clustering.\</span>
+<span class="sd">    For clustering categorical variables need to be converted\</span>
+<span class="sd">    to numerical data.</span>
+
+<span class="sd">    :param int n_clusters: Number of clusters (default=8)</span>
+<span class="sd">    :param int random_state: random_state for KMeans \</span>
+<span class="sd">        (default=1234)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_clusters</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1234</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">,</span>
+                            <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AppendClusterDistance.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendClusterDistance.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit KMeans Clustering</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :param pandas.Series y: Ignored. (default=None)</span>
+<span class="sd">        :return: fitted object (self)</span>
+<span class="sd">        :rtype: object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="AppendClusterDistance.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendClusterDistance.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transform X by appending cluster distance</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :return: Transformed input DataFrame</span>
+<span class="sd">        :rtype: pandas.DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">_check_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">df_clusters</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">Xt</span><span class="p">)</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">add_prefix</span><span class="p">(</span><span class="s1">&#39;Cluster_Distance_&#39;</span><span class="p">)</span>
+        <span class="n">df_clusters</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">Xt</span><span class="o">.</span><span class="n">index</span>
+
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">Xt</span><span class="p">,</span> <span class="n">df_clusters</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Xt</span></div></div>
+
+
+<div class="viewcode-block" id="AppendPrincipalComponent"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendPrincipalComponent">[docs]</a><span class="k">class</span> <span class="nc">AppendPrincipalComponent</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Append principal components obtained from PCA.\</span>
+<span class="sd">    For pca categorical variables need to be converted\</span>
+<span class="sd">    to numerical data. Also, data should be standardized beforehand.</span>
+
+<span class="sd">    :param int n_components: Number of principal components (default=5)</span>
+<span class="sd">    :param int random_state: random_state for PCA \</span>
+<span class="sd">        (default=1234)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1234</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span>
+                         <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AppendPrincipalComponent.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendPrincipalComponent.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit PCA</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :param pandas.Series y: Ignored. (default=None)</span>
+<span class="sd">        :return: fitted object (self)</span>
+<span class="sd">        :rtype: object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="AppendPrincipalComponent.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendPrincipalComponent.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transform X by appending principal components</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :return: Transformed input DataFrame</span>
+<span class="sd">        :rtype: pandas.DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">_check_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">df_pca</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">Xt</span><span class="p">)</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">add_prefix</span><span class="p">(</span><span class="s1">&#39;Principal_Component_&#39;</span><span class="p">)</span>
+        <span class="n">df_pca</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">Xt</span><span class="o">.</span><span class="n">index</span>
+
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">Xt</span><span class="p">,</span> <span class="n">df_pca</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">Xt</span></div></div>
 </pre></div>

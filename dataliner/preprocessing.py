@@ -12,6 +12,9 @@ import warnings
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.ensemble import IsolationForest
 from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.linear_model import LogisticRegression
 
@@ -33,6 +36,13 @@ __all__ = [
     'StandardScaling',
     'MinMaxScaling',
     'CountEncoding',
+    'RankedCountEncoding',
+    'FrequencyEncoding',
+    'RankedTargetMeanEncoding',
+    'AppendAnomalyScore',
+    'AppendCluster',
+    'AppendClusterDistance',
+    'AppendPrincipalComponent',
 ]
 
 
@@ -48,6 +58,21 @@ def _check_y(y):
         pass
     else:
         raise TypeError("Input y is not a pandas Series.")
+
+
+def _check_duplicate(list_):
+    return len(list_) != len(set(list_))
+
+
+def _check_fit(list1, list2):
+    if set(list1) == set(list2):
+        pass
+    elif _check_duplicate(list1) or _check_duplicate(list2):
+        raise ValueError("There are features with duplicate name.")
+    else:
+        raise ValueError("Columns are different from when fitted. For\
+                preprocess with model transforming such as Isolation\
+                Forest or KMeans, require the columns to be same.")
 
 
 class DropColumns(BaseEstimator, TransformerMixin):
@@ -481,10 +506,10 @@ class BinarizeNaN(BaseEstimator, TransformerMixin):
         new_nan_info = Xt.isna().sum()
         new_nan_columns = new_nan_info[new_nan_info != 0].index
 
-        binalize_columns = np.intersect1d(self.nan_columns, new_nan_columns)
-
-        for col in binalize_columns:
+        for col in np.intersect1d(self.nan_columns, new_nan_columns):
             Xt[col + '_NaNFlag'] = Xt[col].isna().apply(lambda x: 1 if x else 0)
+        for col in np.setdiff1d(self.nan_columns, new_nan_columns):
+            Xt[col + '_NaNFlag'] = 0
 
         return Xt
 
@@ -534,13 +559,13 @@ class StandardizeData(BaseEstimator, TransformerMixin):
     Note this will only standardize numerical data\
     and ignore missing values during computation.\
     Deprecated in version 1.1.0 and will be removed in \
-    version 2.0.0. Please use StandardScaling instead.
+    version 1.3.0. Please use StandardScaling instead.
     """
 
     def __init__(self):
         self.num_columns = None
         warnings.warn("Deprecated in version 1.1.0 and will be\
- removed in version 2.0.0. Please use StandardScaling instead."
+ removed in version 1.3.0. Please use StandardScaling instead."
 , FutureWarning)
 
     def fit(self, X, y=None):
@@ -915,5 +940,390 @@ class CountEncoding(BaseEstimator, TransformerMixin):
             Xt[col] = Xt[[col]].fillna('_Missing').join(df_map, on=col).drop(col, axis=1)
 
             Xt[col] = Xt[col].fillna(0)
+
+        return Xt
+
+
+class RankedCountEncoding(BaseEstimator, TransformerMixin):
+    """
+    Firstly encode categorical variables by the count of category\
+    within the categorical column. Then, counts are ranked in\
+    descending order and the ranks are used to encode category\
+    columns. Even in case there are categories with same counts,\
+    ranking will be based on the index and therefore the\
+    categories will be distinguished. RankedFrequencyEncoding\
+    is not provided as the result will be identical to this class.
+    """
+    def __init__(self):
+        self.cat_columns = None
+
+    def fit(self, X, y=None):
+        """
+        Fit transformer to define categorical variables and\
+        obtain ranking of category counts.
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Ignored. (default=None)
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_x(X)
+        self.cat_columns = X.select_dtypes(exclude='number').columns
+
+        self.dic_ranks = {}
+        for col in self.cat_columns:
+            df_rank = pd.DataFrame(X[col].fillna('_Missing'
+                    ).value_counts(ascending=False)).reset_index().reset_index()
+            df_rank.columns = ['Rank', col, 'Counts']
+            df_rank['Rank'] += 1
+            df_rank = df_rank.set_index(col)
+            self.dic_ranks[col] = df_rank
+
+        return self
+
+    def transform(self, X):
+        """
+        Transform by replacing categories with ranks
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        Xt = X.copy()
+        
+        encode_columns = np.intersect1d(self.cat_columns, Xt.columns)
+        
+        for col in encode_columns:
+            df_rank = self.dic_ranks[col]
+            Xt[col] = Xt[[col]].fillna('_Missing').join(df_rank,
+                    on=col).drop([col, 'Counts'], axis=1)
+
+            Xt[col] = Xt[col].fillna(df_rank['Rank'].max() + 1)
+
+        return Xt
+
+
+class FrequencyEncoding(BaseEstimator, TransformerMixin):
+    """
+    Encode categorical variables by the frequency of category\
+    within the categorical column.
+    """
+    def __init__(self):
+        self.cat_columns = None
+
+    def fit(self, X, y=None):
+        """
+        Fit transformer to define categorical variables and\
+        obtain frequency of each categories.
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Ignored. (default=None)
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_x(X)
+        self.cat_columns = X.select_dtypes(exclude='number').columns
+
+        self.dic_freq = {}
+        for col in self.cat_columns:
+            df = pd.concat([X[col], pd.DataFrame(np.zeros(X.shape[0]))],
+                    axis=1).fillna('_Missing').groupby(col, as_index=False)
+            df_count = df.count()
+            df_count.columns = [col, 'Frequency']
+            df_count['Frequency'] = df_count[['Frequency']].apply(
+                    lambda x: x / x.sum())
+            self.dic_freq[col] = df_count
+
+        return self
+
+    def transform(self, X):
+        """
+        Transform by replacing categories with frequency
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        Xt = X.copy()
+        
+        encode_columns = np.intersect1d(self.cat_columns, Xt.columns)
+        
+        for col in encode_columns:
+            df_map = self.dic_freq[col].fillna('_Missing').set_index(col)
+            Xt[col] = Xt[[col]].fillna('_Missing').join(df_map, on=col).drop(col, axis=1)
+
+            Xt[col] = Xt[col].fillna(0)
+
+        return Xt
+
+
+class RankedTargetMeanEncoding(BaseEstimator, TransformerMixin):
+    """
+    Ranking with Target Mean Encoding of categorical variables. Missing\
+    values will be treated as one of the categories. This will treat\
+    Categories with same target mean separately as the rank is obtained\
+    from index once sorted by target mean.
+
+    :param float k: hyperparameter for sigmoid function (default=0.0)
+    :param float f: hyperparameter for sigmoid function (default=1.0)
+    :param float smoothing: Whether to smooth target mean with global mean using\
+    sigmoid function. Do not recommend smoothing=False. (default=0.01)
+    """
+    def __init__(self, k=0, f=1, smoothing=True):
+        self.k = k
+        self.f = f
+        self.smoothing = smoothing
+    
+    def _sigmoid(self, count, k, f):
+        return 1 / (1 + np.exp(- (count - k) / f))
+
+    def fit(self, X, y=None):
+        """
+        Fit transformer to define and store target mean \
+        smoothed target mean for categorical variables.\
+        Then, ranking is created based on target mean.
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Input Series for target variable
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_x(X)
+        _check_y(y)
+        target = y.name
+        global_mean = y.mean()
+        self.global_mean = global_mean
+        sigmoid = np.vectorize(self._sigmoid)
+        self.cat_columns = X.select_dtypes(exclude='number').columns
+
+        self.dic_target_mean = {}
+        for col in self.cat_columns:
+            df = pd.concat([X[col], y], axis=1).fillna('_Missing'
+                    ).groupby(col, as_index=False)
+            local_means = df.mean().rename(columns={target:'target_mean'})
+            counts = df.count().rename(columns={target:'count'})
+
+            df_summary = pd.merge(counts, local_means, on=col)
+            lambda_ = sigmoid(df_summary['count'], self.k, self.f)
+
+            df_summary['smoothed_target_mean'] = lambda_ * df_summary[
+                    'target_mean'] + (1 - lambda_) * global_mean
+            df_summary.loc[df_summary['count'] == 1,
+                    'smoothed_target_mean'] = global_mean
+            
+            df_summary = df_summary.sort_values('smoothed_target_mean'
+                    , ascending=False).reset_index(drop=True).reset_index()
+            df_summary = df_summary.rename(columns={'index':'Rank'})
+            df_summary['Rank'] += 1
+
+            self.dic_target_mean[col] = df_summary
+
+        return self
+
+    def transform(self, X):
+        """
+        Transform by replacing categories with rank
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        Xt = X.copy()
+        
+        encode_columns = np.intersect1d(self.cat_columns, Xt.columns)
+        
+        for col in encode_columns:
+            df_map = self.dic_target_mean[col][[col,
+                    'Rank']].fillna('_Missing').set_index(col)
+            Xt[col] = Xt[[col]].fillna('_Missing').join(df_map, on=col).drop(col, axis=1)
+
+            Xt[col] = Xt[col].fillna(self.global_mean)
+
+        return Xt
+
+
+class AppendAnomalyScore(BaseEstimator, TransformerMixin):
+    """
+    Append anomaly score calculated from isolation forest.\
+    Since IsolationForest needs to be fitted, category columns must\
+    first be encoded to numerical values.
+
+    :param int n_estimators: Number of base estimators in the \
+        Isolation Forest ensemble. (default=100)
+    :param int random_state: random_state for Isolation Forest \
+        (default=1234)
+    """
+
+    def __init__(self, n_estimators=100, random_state=1234):
+        self.model = IsolationForest(n_estimators=n_estimators,
+                                     random_state=random_state)
+
+    def fit(self, X, y=None):
+        """
+        Fit Isolation Forest
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Ignored. (default=None)
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_x(X)
+        self.model.fit(X)
+        self.fit_columns = X.columns
+
+        return self
+
+    def transform(self, X):
+        """
+        Transform X by appending anomaly score
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        Xt = X.copy()
+        _check_fit(self.fit_columns, Xt.columns)
+        Xt['Anomaly_Score'] = list(self.model.decision_function(Xt))
+        return Xt
+
+
+class AppendCluster(BaseEstimator, TransformerMixin):
+    """
+    Append cluster number obtained from kmeans++ clustering.\
+    For clustering categorical variables need to be converted\
+    to numerical data.
+
+    :param int n_clusters: Number of clusters (default=8)
+    :param int random_state: random_state for KMeans \
+        (default=1234)
+    """
+
+    def __init__(self, n_clusters=8, random_state=1234):
+        self.model = KMeans(n_clusters=n_clusters,
+                            random_state=random_state)
+
+    def fit(self, X, y=None):
+        """
+        Fit KMeans Clustering
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Ignored. (default=None)
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_x(X)
+        self.model.fit(X)
+        self.fit_columns = X.columns
+
+        return self
+
+    def transform(self, X):
+        """
+        Transform X by appending cluster number
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        Xt = X.copy()
+        _check_fit(self.fit_columns, Xt.columns)
+        Xt['Cluster_Number'] = list(self.model.predict(Xt))
+        return Xt
+
+
+class AppendClusterDistance(BaseEstimator, TransformerMixin):
+    """
+    Append cluster distance obtained from kmeans++ clustering.\
+    For clustering categorical variables need to be converted\
+    to numerical data.
+
+    :param int n_clusters: Number of clusters (default=8)
+    :param int random_state: random_state for KMeans \
+        (default=1234)
+    """
+
+    def __init__(self, n_clusters=8, random_state=1234):
+        self.model = KMeans(n_clusters=n_clusters,
+                            random_state=random_state)
+
+    def fit(self, X, y=None):
+        """
+        Fit KMeans Clustering
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Ignored. (default=None)
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_x(X)
+        self.model.fit(X)
+        self.fit_columns = X.columns
+
+        return self
+
+    def transform(self, X):
+        """
+        Transform X by appending cluster distance
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        Xt = X.copy()
+        _check_fit(self.fit_columns, Xt.columns)
+        df_clusters = pd.DataFrame(self.model.transform(Xt)
+                ).add_prefix('Cluster_Distance_')
+        df_clusters.index = Xt.index
+
+        Xt = pd.concat([Xt, df_clusters], axis=1)
+
+        return Xt
+
+
+class AppendPrincipalComponent(BaseEstimator, TransformerMixin):
+    """
+    Append principal components obtained from PCA.\
+    For pca categorical variables need to be converted\
+    to numerical data. Also, data should be standardized beforehand.
+
+    :param int n_components: Number of principal components (default=5)
+    :param int random_state: random_state for PCA \
+        (default=1234)
+    """
+
+    def __init__(self, n_components=5, random_state=1234):
+        self.model = PCA(n_components=n_components,
+                         random_state=random_state)
+
+    def fit(self, X, y=None):
+        """
+        Fit PCA
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Ignored. (default=None)
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_x(X)
+        self.model.fit(X)
+        self.fit_columns = X.columns
+
+        return self
+
+    def transform(self, X):
+        """
+        Transform X by appending principal components
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        Xt = X.copy()
+        _check_fit(self.fit_columns, Xt.columns)
+        df_pca = pd.DataFrame(self.model.transform(Xt)
+                ).add_prefix('Principal_Component_')
+        df_pca.index = Xt.index
+
+        Xt = pd.concat([Xt, df_pca], axis=1)
 
         return Xt
