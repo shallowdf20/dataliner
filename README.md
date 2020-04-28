@@ -27,7 +27,7 @@ process = make_pipeline(
     dl.ImputeNaN(),
     dl.TargetMeanEncoding(),
     dl.DropHighCorrelation(),
-    dl.StandardizeData(),
+    dl.StandardScaling(),
     dl.DropLowAUC(),
 )
 
@@ -38,8 +38,6 @@ process.fit_transform(X, y)
 ## Documentation
 https://shallowdf20.github.io/dataliner/preprocessing.html
 
-## What to expect in next version (1.1):
+## What to expect in next version (1.2):
 - Specifying columns to apply each preprocess
 - Accepting numpy data types (currently pandas DataFrame / Series only)
-- Additional preprocess (Data Normalization, Frequency Encoding, etc.)
-- Strictly keeping the order of column names after preprocess
