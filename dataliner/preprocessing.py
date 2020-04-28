@@ -182,8 +182,9 @@ class DropHighCardinality(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_x(X)
+        cat_columns = X.select_dtypes(exclude='number').columns
 
-        for feature in X.columns:
+        for feature in cat_columns:
             if X[feature].unique().shape[0] >= self.max_categories:
                 if self.drop_columns is None:
                     self.drop_columns = [feature]
