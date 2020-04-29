@@ -50,13 +50,13 @@ def test_drop_high_cardinality():
     trans = dp.DropHighCardinality()
 
     df_trans = trans.fit_transform(df)
-    assert df_trans.shape[1] == 6
+    assert df_trans.shape[1] == 9
     assert df.shape[0] == df_trans.shape[0]
 
     trans = dp.DropHighCardinality(max_categories=3)
     df_trans = trans.fit_transform(df)
     
-    assert df_trans.shape[1] == 2
+    assert df_trans.shape[1] == 8
     assert df.shape[0] == df_trans.shape[0]
     
     X_test = pd.read_csv('titanic_test.csv')
