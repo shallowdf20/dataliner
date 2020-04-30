@@ -331,6 +331,8 @@ class DropHighCorrelation(BaseEstimator, TransformerMixin):
                     else:
                         self.drop_columns = np.append(self.drop_columns, col)
 
+        self.drop_columns = np.unique(self.drop_columns)
+
         return self
 
     def transform(self, X):
@@ -1137,7 +1139,7 @@ class RankedTargetMeanEncoding(BaseEstimator, TransformerMixin):
                     'Rank']].fillna('_Missing').set_index(col)
             Xt[col] = Xt[[col]].fillna('_Missing').join(df_map, on=col).drop(col, axis=1)
 
-            Xt[col] = Xt[col].fillna(self.global_mean)
+            Xt[col] = Xt[col].fillna(df_map['Rank'].max() + 1)
 
         return Xt
 
