@@ -495,7 +495,7 @@ def test_append_principal_component():
     trans = dp.AppendPrincipalComponent()
 
     Xt = trans2.fit_transform(X, y)
-    Xt = trans3.fit_transform(Xt, y)
+    Xt = trans3.fit_transform(Xt)
     Xt = trans.fit_transform(Xt.fillna(0))
 
     assert Xt['Principal_Component_0'].max() == 7.497300874940136
