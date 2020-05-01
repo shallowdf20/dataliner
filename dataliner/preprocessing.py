@@ -47,7 +47,7 @@ __all__ = [
 ]
 
 
-def _check_x(X):
+def _check_X(X):
     if isinstance(X, pd.DataFrame):
         pass
     else:
@@ -59,6 +59,14 @@ def _check_y(y):
         pass
     else:
         raise TypeError("Input y is not a pandas Series.")
+
+
+def _check_X_y(X, y):
+    _check_X(X)
+    _check_y(y)
+    
+    if X.shape[0] != y.shape[0]:
+        raise Exception("Number of rows are different between X and y.")
 
 
 def _check_duplicate(list_):
@@ -97,7 +105,22 @@ class DropColumns(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
+
+        if isinstance(self.drop_columns, list):
+            for col in self.drop_columns:
+                if col in X.columns:
+                    pass
+                else:
+                    raise Exception("Specified columns are not in the input.")
+        else:
+            if self.drop_columns in X.columns:
+                pass
+            else:
+                raise Exception("Specified column is not in the input.")
+
+        self.is_fitted_ = X.columns.shape
+
         return self
 
     def transform(self, X):
@@ -108,6 +131,7 @@ class DropColumns(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         if self.drop_columns is None:
             return X
         else:
@@ -133,7 +157,7 @@ class DropNoVariance(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.drop_columns_ = None
 
         for feature in X.columns:
@@ -185,7 +209,7 @@ class DropHighCardinality(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.drop_columns_ = None
         cat_columns = X.select_dtypes(exclude='number').columns
 
@@ -242,8 +266,7 @@ class DropLowAUC(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
-        _check_y(y)
+        _check_X_y(X, y)
         self.drop_columns_ = None
 
         cv = StratifiedKFold(n_splits=5)
@@ -310,8 +333,7 @@ class DropHighCorrelation(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
-        _check_y(y)
+        _check_X_y(X, y)
         self.drop_columns_ = None
 
         Xm = X.corr()
@@ -387,7 +409,7 @@ class ImputeNaN(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         
         self.num_columns_ = X.select_dtypes('number').columns
         self.cat_columns_ = X.select_dtypes(exclude='number').columns
@@ -456,7 +478,7 @@ class OneHotEncoding(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.dummy_cols_ = pd.get_dummies(X, drop_first=self.drop_first).columns
         return self
 
@@ -501,7 +523,7 @@ class BinarizeNaN(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         nan_info = X.isna().sum()
         self.nan_columns_ = nan_info[nan_info != 0].index
         return self
@@ -546,7 +568,7 @@ class CountRowNaN(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.cols_ = X.columns
         return self
 
@@ -592,7 +614,7 @@ class StandardizeData(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.num_columns_ = X.select_dtypes('number').columns
         
         self.dic_mean_ = {}
@@ -647,7 +669,7 @@ class ClipData(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.num_columns_ = X.select_dtypes('number').columns
         self.upperbounds_ = {}
         self.lowerbounds_ = {}
@@ -698,7 +720,7 @@ class GroupRareCategory(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.cat_columns_ = X.select_dtypes(exclude='number').columns
 
         self.rare_categories_ = {}
@@ -758,8 +780,7 @@ class TargetMeanEncoding(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
-        _check_y(y)
+        _check_X_y(X, y)
         target = y.name
         global_mean = y.mean()
         self.global_mean_ = global_mean
@@ -827,7 +848,7 @@ class StandardScaling(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.num_columns_ = X.select_dtypes('number').columns
         
         self.dic_mean_ = {}
@@ -881,7 +902,7 @@ class MinMaxScaling(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.num_columns_ = X.select_dtypes('number').columns
         
         self.dic_min_ = {}
@@ -931,7 +952,7 @@ class CountEncoding(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.cat_columns_ = X.select_dtypes(exclude='number').columns
 
         self.dic_counts_ = {}
@@ -988,7 +1009,7 @@ class RankedCountEncoding(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.cat_columns_ = X.select_dtypes(exclude='number').columns
 
         self.dic_ranks_ = {}
@@ -1043,7 +1064,7 @@ class FrequencyEncoding(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.cat_columns_ = X.select_dtypes(exclude='number').columns
 
         self.dic_freq_ = {}
@@ -1111,8 +1132,7 @@ class RankedTargetMeanEncoding(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
-        _check_y(y)
+        _check_X_y(X, y)
         target = y.name
         global_mean = y.mean()
         self.global_mean_ = global_mean
@@ -1191,7 +1211,7 @@ class AppendAnomalyScore(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.model_ = IsolationForest(n_estimators=self.n_estimators,
                                       random_state=self.random_state)
         self.model_.fit(X)
@@ -1238,7 +1258,7 @@ class AppendCluster(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.model_ = KMeans(n_clusters=self.n_clusters,
                              random_state=self.random_state)
         self.model_.fit(X)
@@ -1285,7 +1305,7 @@ class AppendClusterDistance(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.model_ = KMeans(n_clusters=self.n_clusters,
                              random_state=self.random_state)
         self.model_.fit(X)
@@ -1337,7 +1357,7 @@ class AppendPrincipalComponent(BaseEstimator, TransformerMixin):
         :return: fitted object (self)
         :rtype: object
         """
-        _check_x(X)
+        _check_X(X)
         self.model_ = PCA(n_components=self.n_components,
                           random_state=self.random_state)
         self.model_.fit(X)
