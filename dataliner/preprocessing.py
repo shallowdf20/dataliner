@@ -66,7 +66,7 @@ def _check_X_y(X, y):
     _check_y(y)
     
     if X.shape[0] != y.shape[0]:
-        raise Exception("Number of rows are different between X and y.")
+        raise ValueError("Number of rows are different between X and y.")
 
 
 def _check_duplicate(list_):
@@ -132,6 +132,8 @@ class DropColumns(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         if self.drop_columns is None:
             return X
         else:
@@ -158,6 +160,7 @@ class DropNoVariance(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.drop_columns_ = None
 
         for feature in X.columns:
@@ -178,6 +181,7 @@ class DropNoVariance(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
 
         if self.drop_columns_ is None:
             return X
@@ -210,6 +214,7 @@ class DropHighCardinality(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.drop_columns_ = None
         cat_columns = X.select_dtypes(exclude='number').columns
 
@@ -231,6 +236,8 @@ class DropHighCardinality(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         if self.drop_columns_ is None:
             return X
         else:
@@ -267,6 +274,7 @@ class DropLowAUC(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X_y(X, y)
+
         self.drop_columns_ = None
 
         cv = StratifiedKFold(n_splits=5)
@@ -301,6 +309,8 @@ class DropLowAUC(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         if self.drop_columns_ is None:
             return X
         else:
@@ -334,6 +344,7 @@ class DropHighCorrelation(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X_y(X, y)
+
         self.drop_columns_ = None
 
         Xm = X.corr()
@@ -373,6 +384,8 @@ class DropHighCorrelation(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         if self.drop_columns_ is None:
             return X
         else:
@@ -445,6 +458,8 @@ class ImputeNaN(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         num_columns = np.intersect1d(self.num_columns_, X.columns)
         cat_columns = np.intersect1d(self.cat_columns_, X.columns)
@@ -479,6 +494,7 @@ class OneHotEncoding(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.dummy_cols_ = pd.get_dummies(X, drop_first=self.drop_first).columns
         return self
 
@@ -493,6 +509,8 @@ class OneHotEncoding(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = pd.get_dummies(X, drop_first=self.drop_first)
         self.new_dummy_cols_ = Xt.columns
 
@@ -500,6 +518,9 @@ class OneHotEncoding(BaseEstimator, TransformerMixin):
             Xt[col] = 0
         for col in np.setdiff1d(self.new_dummy_cols_, self.dummy_cols_):
             Xt = Xt.drop(col, axis=1)
+
+        columns_order = np.intersect1d(self.dummy_cols_, self.new_dummy_cols_)
+        Xt = pd.DataFrame(Xt, columns=self.dummy_cols_)
 
         return Xt
 
@@ -524,6 +545,7 @@ class BinarizeNaN(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         nan_info = X.isna().sum()
         self.nan_columns_ = nan_info[nan_info != 0].index
         return self
@@ -538,6 +560,8 @@ class BinarizeNaN(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         new_nan_info = Xt.isna().sum()
         new_nan_columns = new_nan_info[new_nan_info != 0].index
@@ -569,6 +593,7 @@ class CountRowNaN(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.cols_ = X.columns
         return self
 
@@ -583,6 +608,8 @@ class CountRowNaN(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         check_columns = np.intersect1d(self.cols_, Xt.columns)
 
@@ -615,6 +642,7 @@ class StandardizeData(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.num_columns_ = X.select_dtypes('number').columns
         
         self.dic_mean_ = {}
@@ -633,6 +661,8 @@ class StandardizeData(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         
         standardize_columns = np.intersect1d(self.num_columns_, Xt.columns)
@@ -670,12 +700,14 @@ class ClipData(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.num_columns_ = X.select_dtypes('number').columns
         self.upperbounds_ = {}
         self.lowerbounds_ = {}
         for col in self.num_columns_:
             self.upperbounds_[col], self.lowerbounds_[col] = np.percentile(
                 X[col].dropna(), [100-self.threshold*100, self.threshold*100])
+
         return self
 
     def transform(self, X):
@@ -687,6 +719,8 @@ class ClipData(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         
         clip_columns = np.intersect1d(self.num_columns_, Xt.columns)
@@ -721,6 +755,7 @@ class GroupRareCategory(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.cat_columns_ = X.select_dtypes(exclude='number').columns
 
         self.rare_categories_ = {}
@@ -740,6 +775,8 @@ class GroupRareCategory(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         
         group_columns = np.intersect1d(self.cat_columns_, Xt.columns)
@@ -781,6 +818,7 @@ class TargetMeanEncoding(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X_y(X, y)
+
         target = y.name
         global_mean = y.mean()
         self.global_mean_ = global_mean
@@ -814,6 +852,8 @@ class TargetMeanEncoding(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         
         encode_columns = np.intersect1d(self.cat_columns_, Xt.columns)
@@ -849,6 +889,7 @@ class StandardScaling(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.num_columns_ = X.select_dtypes('number').columns
         
         self.dic_mean_ = {}
@@ -867,6 +908,8 @@ class StandardScaling(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         
         standardize_columns = np.intersect1d(self.num_columns_, Xt.columns)
@@ -903,6 +946,7 @@ class MinMaxScaling(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.num_columns_ = X.select_dtypes('number').columns
         
         self.dic_min_ = {}
@@ -921,6 +965,8 @@ class MinMaxScaling(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         
         minmax_columns = np.intersect1d(self.num_columns_, Xt.columns)
@@ -953,6 +999,7 @@ class CountEncoding(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.cat_columns_ = X.select_dtypes(exclude='number').columns
 
         self.dic_counts_ = {}
@@ -973,6 +1020,8 @@ class CountEncoding(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         
         encode_columns = np.intersect1d(self.cat_columns_, Xt.columns)
@@ -1010,6 +1059,7 @@ class RankedCountEncoding(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.cat_columns_ = X.select_dtypes(exclude='number').columns
 
         self.dic_ranks_ = {}
@@ -1032,6 +1082,8 @@ class RankedCountEncoding(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         
         encode_columns = np.intersect1d(self.cat_columns_, Xt.columns)
@@ -1065,6 +1117,7 @@ class FrequencyEncoding(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.cat_columns_ = X.select_dtypes(exclude='number').columns
 
         self.dic_freq_ = {}
@@ -1088,6 +1141,8 @@ class FrequencyEncoding(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         
         encode_columns = np.intersect1d(self.cat_columns_, Xt.columns)
@@ -1133,6 +1188,7 @@ class RankedTargetMeanEncoding(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X_y(X, y)
+
         target = y.name
         global_mean = y.mean()
         self.global_mean_ = global_mean
@@ -1172,6 +1228,8 @@ class RankedTargetMeanEncoding(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         
         encode_columns = np.intersect1d(self.cat_columns_, Xt.columns)
@@ -1212,6 +1270,7 @@ class AppendAnomalyScore(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.model_ = IsolationForest(n_estimators=self.n_estimators,
                                       random_state=self.random_state)
         self.model_.fit(X)
@@ -1228,6 +1287,8 @@ class AppendAnomalyScore(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         _check_fit(self.fit_columns_, Xt.columns)
         Xt['Anomaly_Score'] = list(self.model_.decision_function(Xt))
@@ -1259,6 +1320,7 @@ class AppendCluster(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.model_ = KMeans(n_clusters=self.n_clusters,
                              random_state=self.random_state)
         self.model_.fit(X)
@@ -1275,6 +1337,8 @@ class AppendCluster(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         _check_fit(self.fit_columns_, Xt.columns)
         Xt['Cluster_Number'] = list(self.model_.predict(Xt))
@@ -1306,6 +1370,7 @@ class AppendClusterDistance(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.model_ = KMeans(n_clusters=self.n_clusters,
                              random_state=self.random_state)
         self.model_.fit(X)
@@ -1322,6 +1387,8 @@ class AppendClusterDistance(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         _check_fit(self.fit_columns_, Xt.columns)
         df_clusters = pd.DataFrame(self.model_.transform(Xt)
@@ -1358,6 +1425,7 @@ class AppendPrincipalComponent(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X(X)
+
         self.model_ = PCA(n_components=self.n_components,
                           random_state=self.random_state)
         self.model_.fit(X)
@@ -1374,6 +1442,8 @@ class AppendPrincipalComponent(BaseEstimator, TransformerMixin):
         :rtype: pandas.DataFrame
         """
         check_is_fitted(self)
+        _check_X(X)
+
         Xt = X.copy()
         _check_fit(self.fit_columns_, Xt.columns)
         df_pca = pd.DataFrame(self.model_.transform(Xt)
