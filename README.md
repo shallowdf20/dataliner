@@ -7,6 +7,9 @@ Please feel free to send pull requests for bug fix, improvements or new preproce
 ! pip install dataliner
 ```
 
+## Documentation
+https://shallowdf20.github.io/dataliner/preprocessing.html
+
 ## Quick Start
 Train data from Kaggle Titanic is used in this example. https://www.kaggle.com/c/titanic/data
 
@@ -34,6 +37,3 @@ process = make_pipeline(
 process.fit_transform(X, y)
 
 ```
-
-## Documentation
-https://shallowdf20.github.io/dataliner/preprocessing.html
