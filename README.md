@@ -37,7 +37,3 @@ process.fit_transform(X, y)
 
 ## Documentation
 https://shallowdf20.github.io/dataliner/preprocessing.html
-
-## What to expect in next version (1.2):
-- Specifying columns to apply each preprocess
-- Accepting numpy data types (currently pandas DataFrame / Series only)
