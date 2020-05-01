@@ -17,6 +17,7 @@ from sklearn.decomposition import PCA
 from sklearn.ensemble import IsolationForest
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score, StratifiedKFold
+from sklearn.utils.validation import check_is_fitted
 
 
 __all__ = [
@@ -152,6 +153,8 @@ class DropNoVariance(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
+
         if self.drop_columns_ is None:
             return X
         else:
@@ -203,6 +206,7 @@ class DropHighCardinality(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         if self.drop_columns_ is None:
             return X
         else:
@@ -273,6 +277,7 @@ class DropLowAUC(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         if self.drop_columns_ is None:
             return X
         else:
@@ -345,6 +350,7 @@ class DropHighCorrelation(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         if self.drop_columns_ is None:
             return X
         else:
@@ -416,6 +422,7 @@ class ImputeNaN(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         num_columns = np.intersect1d(self.num_columns_, X.columns)
         cat_columns = np.intersect1d(self.cat_columns_, X.columns)
@@ -463,6 +470,7 @@ class OneHotEncoding(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = pd.get_dummies(X, drop_first=self.drop_first)
         self.new_dummy_cols_ = Xt.columns
 
@@ -507,6 +515,7 @@ class BinarizeNaN(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         new_nan_info = Xt.isna().sum()
         new_nan_columns = new_nan_info[new_nan_info != 0].index
@@ -551,6 +560,7 @@ class CountRowNaN(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         check_columns = np.intersect1d(self.cols_, Xt.columns)
 
@@ -600,6 +610,7 @@ class StandardizeData(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         
         standardize_columns = np.intersect1d(self.num_columns_, Xt.columns)
@@ -653,6 +664,7 @@ class ClipData(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         
         clip_columns = np.intersect1d(self.num_columns_, Xt.columns)
@@ -705,6 +717,7 @@ class GroupRareCategory(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         
         group_columns = np.intersect1d(self.cat_columns_, Xt.columns)
@@ -779,6 +792,7 @@ class TargetMeanEncoding(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         
         encode_columns = np.intersect1d(self.cat_columns_, Xt.columns)
@@ -831,6 +845,7 @@ class StandardScaling(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         
         standardize_columns = np.intersect1d(self.num_columns_, Xt.columns)
@@ -884,6 +899,7 @@ class MinMaxScaling(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         
         minmax_columns = np.intersect1d(self.num_columns_, Xt.columns)
@@ -935,6 +951,7 @@ class CountEncoding(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         
         encode_columns = np.intersect1d(self.cat_columns_, Xt.columns)
@@ -993,6 +1010,7 @@ class RankedCountEncoding(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         
         encode_columns = np.intersect1d(self.cat_columns_, Xt.columns)
@@ -1048,6 +1066,7 @@ class FrequencyEncoding(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         
         encode_columns = np.intersect1d(self.cat_columns_, Xt.columns)
@@ -1132,6 +1151,7 @@ class RankedTargetMeanEncoding(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         
         encode_columns = np.intersect1d(self.cat_columns_, Xt.columns)
@@ -1187,6 +1207,7 @@ class AppendAnomalyScore(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         _check_fit(self.fit_columns_, Xt.columns)
         Xt['Anomaly_Score'] = list(self.model_.decision_function(Xt))
@@ -1233,6 +1254,7 @@ class AppendCluster(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         _check_fit(self.fit_columns_, Xt.columns)
         Xt['Cluster_Number'] = list(self.model_.predict(Xt))
@@ -1279,6 +1301,7 @@ class AppendClusterDistance(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         _check_fit(self.fit_columns_, Xt.columns)
         df_clusters = pd.DataFrame(self.model_.transform(Xt)
@@ -1330,6 +1353,7 @@ class AppendPrincipalComponent(BaseEstimator, TransformerMixin):
         :return: Transformed input DataFrame
         :rtype: pandas.DataFrame
         """
+        check_is_fitted(self)
         Xt = X.copy()
         _check_fit(self.fit_columns_, Xt.columns)
         df_pca = pd.DataFrame(self.model_.transform(Xt)
