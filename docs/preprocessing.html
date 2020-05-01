@@ -237,7 +237,7 @@ process.</p>
 <p>Simply delete columns specified from input dataframe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>drop_columns</strong> (<em>list</em>) – List of feature names which will be droped         from input dataframe. (default=None)</p>
+<dd class="field-odd"><p><strong>drop_columns</strong> (<em>list</em>) – List of feature names which will be droped     from input dataframe. For single columns, string can also be used.    (default=None)</p>
 </dd>
 </dl>
 <p><strong>Methods</strong></p>
@@ -361,7 +361,7 @@ process.</p>
 Basically means dropping column with too many categories.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>max_categories</strong> (<em>int</em>) – Maximum number of categories to be permitted    in a column. If number of categories in a certain column exceeds this value,    that column will be deleted. (default=50)</p>
+<dd class="field-odd"><p><strong>max_categories</strong> (<em>int</em>) – Maximum number of categories to be permitted    in a column. If number of categories in a certain column exceeds this    value, that column will be deleted. (default=50)</p>
 </dd>
 </dl>
 <p><strong>Methods</strong></p>
@@ -620,7 +620,7 @@ Basically means dropping column with too many categories.</p>
 <p>One Hot Encoding of categorical variables.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>drop_first</strong> (<em>boolean</em>) – Whether to drop first column after one     hot encoding in order to avoid multi-collinearity. (default=True)</p>
+<dd class="field-odd"><p><strong>drop_first</strong> (<em>bool</em>) – Whether to drop first column after one     hot encoding in order to avoid multi-collinearity. (default=True)</p>
 </dd>
 </dl>
 <p><strong>Methods</strong></p>

@@ -161,8 +161,9 @@
 <span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">KMeans</span>
 <span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
 <span class="kn">from</span> <span class="nn">sklearn.ensemble</span> <span class="kn">import</span> <span class="n">IsolationForest</span>
-<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">cross_val_score</span><span class="p">,</span> <span class="n">StratifiedKFold</span>
 <span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LogisticRegression</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">cross_val_score</span><span class="p">,</span> <span class="n">StratifiedKFold</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils.validation</span> <span class="kn">import</span> <span class="n">check_is_fitted</span>
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
@@ -192,7 +193,7 @@
 <span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
         <span class="k">pass</span>
     <span class="k">else</span><span class="p">:</span>
@@ -204,6 +205,14 @@
         <span class="k">pass</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Input y is not a pandas Series.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_check_X_y</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">_check_y</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Number of rows are different between X and y.&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_check_duplicate</span><span class="p">(</span><span class="n">list_</span><span class="p">):</span>
@@ -226,7 +235,8 @@
 <span class="sd">    Simply delete columns specified from input dataframe.</span>
 
 <span class="sd">    :param list drop_columns: List of feature names which will be droped \</span>
-<span class="sd">        from input dataframe. (default=None)</span>
+<span class="sd">    from input dataframe. For single columns, string can also be used.\</span>
+<span class="sd">    (default=None)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drop_columns</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -241,7 +251,22 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Specified columns are not in the input.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="ow">in</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Specified column is not in the input.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_fitted_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">shape</span>
+
         <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="DropColumns.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.DropColumns.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
@@ -252,6 +277,9 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">X</span>
         <span class="k">else</span><span class="p">:</span>
@@ -266,7 +294,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">pass</span>
 
 <div class="viewcode-block" id="DropNoVariance.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.DropNoVariance.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -277,14 +305,16 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">X</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">feature</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="o">=</span> <span class="p">[</span><span class="n">feature</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span><span class="p">,</span> <span class="n">feature</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span><span class="p">,</span> <span class="n">feature</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -296,10 +326,13 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">X</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">drop_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+            <span class="n">drop_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
             <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">drop_columns</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">Xt</span></div></div>
 
@@ -310,13 +343,12 @@
 <span class="sd">    Basically means dropping column with too many categories.</span>
 
 <span class="sd">    :param int max_categories: Maximum number of categories to be permitted\</span>
-<span class="sd">    in a column. If number of categories in a certain column exceeds this value,\</span>
-<span class="sd">    that column will be deleted. (default=50)</span>
+<span class="sd">    in a column. If number of categories in a certain column exceeds this\</span>
+<span class="sd">    value, that column will be deleted. (default=50)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_categories</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_categories</span> <span class="o">=</span> <span class="n">max_categories</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="DropHighCardinality.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.DropHighCardinality.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -327,14 +359,17 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">cat_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">cat_columns</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">X</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_categories</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">feature</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="o">=</span> <span class="p">[</span><span class="n">feature</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span><span class="p">,</span> <span class="n">feature</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span><span class="p">,</span> <span class="n">feature</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -346,10 +381,13 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">X</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">drop_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+            <span class="n">drop_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
             <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">drop_columns</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">Xt</span></div></div>
 
@@ -370,7 +408,6 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.51</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="DropLowAUC.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.DropLowAUC.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -382,8 +419,9 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="n">_check_y</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">_check_X_y</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="n">cv</span> <span class="o">=</span> <span class="n">StratifiedKFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
         <span class="n">lr</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">penalty</span><span class="o">=</span><span class="s1">&#39;l2&#39;</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="s1">&#39;lbfgs&#39;</span><span class="p">)</span>
@@ -401,10 +439,10 @@
             <span class="n">roc_auc</span> <span class="o">=</span> <span class="n">cross_val_score</span><span class="p">(</span><span class="n">lr</span><span class="p">,</span> <span class="n">X_lr</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 
             <span class="k">if</span> <span class="n">roc_auc</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">feature</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="o">=</span> <span class="p">[</span><span class="n">feature</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span><span class="p">,</span> <span class="n">feature</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span><span class="p">,</span> <span class="n">feature</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -416,10 +454,13 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">X</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">drop_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+            <span class="n">drop_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
             <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">drop_columns</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">Xt</span></div></div>
 
@@ -436,7 +477,6 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.95</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="DropHighCorrelation.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.DropHighCorrelation.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -449,8 +489,9 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="n">_check_y</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">_check_X_y</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="n">Xm</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">corr</span><span class="p">()</span>
         <span class="n">pairs</span> <span class="o">=</span> <span class="p">[]</span>
@@ -463,6 +504,7 @@
 
         <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">unique_pairs</span><span class="p">:</span>
             <span class="n">pearsons</span> <span class="o">=</span> <span class="p">[]</span>
+
             <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">pair</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">col</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">pearson</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()),</span> <span class="n">y</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
@@ -471,12 +513,12 @@
 
             <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">pair</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">col</span> <span class="o">!=</span> <span class="n">best_col</span> <span class="ow">and</span> <span class="n">col</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="o">=</span> <span class="n">col</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="o">=</span> <span class="n">col</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span><span class="p">))</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="DropHighCorrelation.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.DropHighCorrelation.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
@@ -487,10 +529,13 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">X</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">drop_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+            <span class="n">drop_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_columns_</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
             <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">drop_columns</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">Xt</span></div></div>
 
@@ -523,28 +568,29 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_imputes</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cat_imputes</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_imputes_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_imputes_</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_strategy</span> <span class="o">==</span> <span class="s1">&#39;mean&#39;</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">num_imputes</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_imputes_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_strategy</span> <span class="o">==</span> <span class="s1">&#39;median&#39;</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">num_imputes</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">median</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_imputes_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">median</span><span class="p">()</span>
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_strategy</span> <span class="o">==</span> <span class="s1">&#39;mode&#39;</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">num_imputes</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mode</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_imputes_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mode</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">num_imputes</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_imputes_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
         
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_strategy</span> <span class="o">==</span> <span class="s1">&#39;mode&#39;</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">cat_imputes</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mode</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cat_imputes_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mode</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">cat_imputes</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ImputedNaN&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cat_imputes_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ImputedNaN&#39;</span>
         
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -557,15 +603,18 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">num_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
-        <span class="n">cat_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">num_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">cat_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">num_columns</span><span class="p">:</span>
-            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_imputes</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
+            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_imputes_</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
 
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cat_columns</span><span class="p">:</span>
-            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_imputes</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
+            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_imputes_</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
 
         <span class="k">return</span> <span class="n">Xt</span></div></div>
 
@@ -574,7 +623,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    One Hot Encoding of categorical variables.</span>
 
-<span class="sd">    :param boolean drop_first: Whether to drop first column after one \</span>
+<span class="sd">    :param bool drop_first: Whether to drop first column after one \</span>
 <span class="sd">    hot encoding in order to avoid multi-collinearity. (default=True)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drop_first</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -590,8 +639,9 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dummy_cols</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">drop_first</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_first</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dummy_cols_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">drop_first</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_first</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="OneHotEncoding.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.OneHotEncoding.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
@@ -604,13 +654,18 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">Xt</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">drop_first</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_first</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">new_dummy_cols</span> <span class="o">=</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">setdiff1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dummy_cols</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_dummy_cols</span><span class="p">):</span>
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">drop_first</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">drop_first</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_dummy_cols_</span> <span class="o">=</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">setdiff1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dummy_cols_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_dummy_cols_</span><span class="p">):</span>
             <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">setdiff1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_dummy_cols</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dummy_cols</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">setdiff1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_dummy_cols_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dummy_cols_</span><span class="p">):</span>
             <span class="n">Xt</span> <span class="o">=</span> <span class="n">Xt</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">Xt</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dummy_cols_</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">Xt</span></div></div>
 
@@ -622,7 +677,7 @@
 <span class="sd">    not (1).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nan_columns</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">pass</span>
 
 <div class="viewcode-block" id="BinarizeNaN.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.BinarizeNaN.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -634,9 +689,10 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">nan_info</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nan_columns</span> <span class="o">=</span> <span class="n">nan_info</span><span class="p">[</span><span class="n">nan_info</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nan_columns_</span> <span class="o">=</span> <span class="n">nan_info</span><span class="p">[</span><span class="n">nan_info</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="BinarizeNaN.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.BinarizeNaN.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
@@ -648,13 +704,16 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">new_nan_info</span> <span class="o">=</span> <span class="n">Xt</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
         <span class="n">new_nan_columns</span> <span class="o">=</span> <span class="n">new_nan_info</span><span class="p">[</span><span class="n">new_nan_info</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
 
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nan_columns</span><span class="p">,</span> <span class="n">new_nan_columns</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nan_columns_</span><span class="p">,</span> <span class="n">new_nan_columns</span><span class="p">):</span>
             <span class="n">Xt</span><span class="p">[</span><span class="n">col</span> <span class="o">+</span> <span class="s1">&#39;_NaNFlag&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">x</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">setdiff1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nan_columns</span><span class="p">,</span> <span class="n">new_nan_columns</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">setdiff1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nan_columns_</span><span class="p">,</span> <span class="n">new_nan_columns</span><span class="p">):</span>
             <span class="n">Xt</span><span class="p">[</span><span class="n">col</span> <span class="o">+</span> <span class="s1">&#39;_NaNFlag&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="k">return</span> <span class="n">Xt</span></div></div>
@@ -667,7 +726,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nan_columns</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">pass</span>
 
 <div class="viewcode-block" id="CountRowNaN.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.CountRowNaN.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -678,8 +737,9 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cols</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cols_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="CountRowNaN.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.CountRowNaN.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
@@ -692,8 +752,11 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">check_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">check_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
 
         <span class="n">Xt</span><span class="p">[</span><span class="s1">&#39;NaN_Totals&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">check_columns</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Xt</span></div></div>
@@ -709,7 +772,6 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated in version 1.1.0 and will be</span><span class="se">\</span>
 <span class="s2"> removed in version 1.3.0. Please use StandardScaling instead.&quot;</span>
 <span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
@@ -724,14 +786,15 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dic_std</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dic_std</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_std_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_std_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="StandardizeData.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.StandardizeData.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
@@ -742,14 +805,17 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         
-        <span class="n">standardize_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">standardize_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">standardize_columns</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_std</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_std_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">pass</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean</span><span class="p">[</span><span class="n">col</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_std</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
+                <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean_</span><span class="p">[</span><span class="n">col</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_std_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
         
         <span class="k">return</span> <span class="n">Xt</span></div></div>
 
@@ -778,13 +844,15 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">upperbounds</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lowerbounds</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">upperbounds</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">lowerbounds</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upperbounds_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lowerbounds_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upperbounds_</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">lowerbounds_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
                 <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">(),</span> <span class="p">[</span><span class="mi">100</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="o">*</span><span class="mi">100</span><span class="p">])</span>
+
         <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="ClipData.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.ClipData.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
@@ -795,13 +863,16 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         
-        <span class="n">clip_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">clip_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">clip_columns</span><span class="p">:</span>
             <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> 
-                              <span class="bp">self</span><span class="o">.</span><span class="n">upperbounds</span><span class="p">[</span><span class="n">col</span><span class="p">],</span>
-                              <span class="bp">self</span><span class="o">.</span><span class="n">lowerbounds</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">upperbounds_</span><span class="p">[</span><span class="n">col</span><span class="p">],</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">lowerbounds_</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
 
         <span class="k">return</span> <span class="n">Xt</span></div></div>
 
@@ -828,15 +899,16 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">rare_categories</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rare_categories_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span><span class="p">:</span>
             <span class="n">catcounts</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">rare_categories</span> <span class="o">=</span> <span class="n">catcounts</span><span class="p">[</span><span class="n">catcounts</span> <span class="o">&lt;=</span>
                     <span class="n">catcounts</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">rare_categories</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">rare_categories</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rare_categories_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">rare_categories</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="GroupRareCategory.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.GroupRareCategory.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
@@ -847,11 +919,14 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         
-        <span class="n">group_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">group_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">group_columns</span><span class="p">:</span>
-            <span class="n">rare_categories</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rare_categories</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
+            <span class="n">rare_categories</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rare_categories_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
 
             <span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="n">rare_categories</span><span class="p">:</span>
                 <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">cat</span><span class="p">,</span> <span class="s1">&#39;RareCategory&#39;</span><span class="p">)</span>
@@ -887,16 +962,16 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="n">_check_y</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">_check_X_y</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
         <span class="n">target</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">name</span>
         <span class="n">global_mean</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">global_mean</span> <span class="o">=</span> <span class="n">global_mean</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">global_mean_</span> <span class="o">=</span> <span class="n">global_mean</span>
         <span class="n">sigmoid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sigmoid</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">dic_target_mean</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_target_mean_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span><span class="p">:</span>
             <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">y</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span>
                     <span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">local_means</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">target</span><span class="p">:</span><span class="s1">&#39;target_mean&#39;</span><span class="p">})</span>
@@ -909,7 +984,7 @@
                     <span class="s1">&#39;target_mean&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">lambda_</span><span class="p">)</span> <span class="o">*</span> <span class="n">global_mean</span>
             <span class="n">df_summary</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_summary</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
                     <span class="s1">&#39;smoothed_target_mean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">global_mean</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dic_target_mean</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_summary</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_target_mean_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_summary</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -921,16 +996,19 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         
-        <span class="n">encode_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">encode_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
         
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">encode_columns</span><span class="p">:</span>
-            <span class="n">df_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_target_mean</span><span class="p">[</span><span class="n">col</span><span class="p">][[</span><span class="n">col</span><span class="p">,</span>
+            <span class="n">df_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_target_mean_</span><span class="p">[</span><span class="n">col</span><span class="p">][[</span><span class="n">col</span><span class="p">,</span>
                     <span class="s1">&#39;smoothed_target_mean&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
             <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df_map</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_mean</span><span class="p">)</span>
+            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_mean_</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">Xt</span></div></div>
 
@@ -943,7 +1021,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">pass</span>
 
 <div class="viewcode-block" id="StandardScaling.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.StandardScaling.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -955,14 +1033,15 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dic_std</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dic_std</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_std_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_std_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="StandardScaling.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.StandardScaling.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
@@ -973,14 +1052,17 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         
-        <span class="n">standardize_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">standardize_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">standardize_columns</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_std</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_std_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">pass</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean</span><span class="p">[</span><span class="n">col</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_std</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
+                <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean_</span><span class="p">[</span><span class="n">col</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_std_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
         
         <span class="k">return</span> <span class="n">Xt</span></div></div>
 
@@ -996,7 +1078,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">pass</span>
 
 <div class="viewcode-block" id="MinMaxScaling.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.MinMaxScaling.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1008,14 +1090,15 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">dic_min</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dic_max</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dic_min</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dic_max</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_min_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_max_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_min_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_max_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="MinMaxScaling.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.MinMaxScaling.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
@@ -1026,15 +1109,18 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         
-        <span class="n">minmax_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">minmax_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">minmax_columns</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_max</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_min</span><span class="p">[</span><span class="n">col</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_max_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_min_</span><span class="p">[</span><span class="n">col</span><span class="p">]:</span>
                 <span class="k">pass</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_min</span><span class="p">[</span><span class="n">col</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">dic_max</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_min</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
+                <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_min_</span><span class="p">[</span><span class="n">col</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">dic_max_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_min_</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
         
         <span class="k">return</span> <span class="n">Xt</span></div></div>
 
@@ -1045,7 +1131,7 @@
 <span class="sd">    within the categorical column.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">pass</span>
 
 <div class="viewcode-block" id="CountEncoding.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.CountEncoding.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1057,15 +1143,16 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">dic_counts</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_counts_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span><span class="p">:</span>
             <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))],</span>
                     <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">counts</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="s1">&#39;count&#39;</span><span class="p">})</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dic_counts</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_counts_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -1077,12 +1164,15 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         
-        <span class="n">encode_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">encode_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
         
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">encode_columns</span><span class="p">:</span>
-            <span class="n">df_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_counts</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            <span class="n">df_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_counts_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
             <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df_map</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
             <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -1101,7 +1191,7 @@
 <span class="sd">    is not provided as the result will be identical to this class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">pass</span>
 
 <div class="viewcode-block" id="RankedCountEncoding.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.RankedCountEncoding.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1113,17 +1203,18 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">dic_ranks</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_ranks_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span><span class="p">:</span>
             <span class="n">df_rank</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span>
                     <span class="p">)</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
             <span class="n">df_rank</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Rank&#39;</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="s1">&#39;Counts&#39;</span><span class="p">]</span>
             <span class="n">df_rank</span><span class="p">[</span><span class="s1">&#39;Rank&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="n">df_rank</span> <span class="o">=</span> <span class="n">df_rank</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dic_ranks</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_rank</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_ranks_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_rank</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -1135,12 +1226,15 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         
-        <span class="n">encode_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">encode_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
         
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">encode_columns</span><span class="p">:</span>
-            <span class="n">df_rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_ranks</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
+            <span class="n">df_rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_ranks_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
             <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df_rank</span><span class="p">,</span>
                     <span class="n">on</span><span class="o">=</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">col</span><span class="p">,</span> <span class="s1">&#39;Counts&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
@@ -1155,7 +1249,7 @@
 <span class="sd">    within the categorical column.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">pass</span>
 
 <div class="viewcode-block" id="FrequencyEncoding.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.FrequencyEncoding.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1167,18 +1261,19 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">dic_freq</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_freq_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span><span class="p">:</span>
             <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))],</span>
                     <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">df_count</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
             <span class="n">df_count</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span><span class="p">,</span> <span class="s1">&#39;Frequency&#39;</span><span class="p">]</span>
             <span class="n">df_count</span><span class="p">[</span><span class="s1">&#39;Frequency&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_count</span><span class="p">[[</span><span class="s1">&#39;Frequency&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
                     <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">/</span> <span class="n">x</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dic_freq</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_count</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_freq_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_count</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -1190,12 +1285,15 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         
-        <span class="n">encode_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">encode_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
         
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">encode_columns</span><span class="p">:</span>
-            <span class="n">df_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_freq</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            <span class="n">df_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_freq_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
             <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df_map</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
             <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -1234,16 +1332,16 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="n">_check_y</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">_check_X_y</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
         <span class="n">target</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">name</span>
         <span class="n">global_mean</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">global_mean</span> <span class="o">=</span> <span class="n">global_mean</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">global_mean_</span> <span class="o">=</span> <span class="n">global_mean</span>
         <span class="n">sigmoid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sigmoid</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">dic_target_mean</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dic_target_mean_</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span><span class="p">:</span>
             <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">y</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span>
                     <span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">local_means</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">target</span><span class="p">:</span><span class="s1">&#39;target_mean&#39;</span><span class="p">})</span>
@@ -1262,7 +1360,7 @@
             <span class="n">df_summary</span> <span class="o">=</span> <span class="n">df_summary</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;index&#39;</span><span class="p">:</span><span class="s1">&#39;Rank&#39;</span><span class="p">})</span>
             <span class="n">df_summary</span><span class="p">[</span><span class="s1">&#39;Rank&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">dic_target_mean</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_summary</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dic_target_mean_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_summary</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -1274,16 +1372,19 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         
-        <span class="n">encode_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">encode_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_columns_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
         
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">encode_columns</span><span class="p">:</span>
-            <span class="n">df_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_target_mean</span><span class="p">[</span><span class="n">col</span><span class="p">][[</span><span class="n">col</span><span class="p">,</span>
+            <span class="n">df_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_target_mean_</span><span class="p">[</span><span class="n">col</span><span class="p">][[</span><span class="n">col</span><span class="p">,</span>
                     <span class="s1">&#39;Rank&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
             <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">&#39;_Missing&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df_map</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_mean</span><span class="p">)</span>
+            <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">df_map</span><span class="p">[</span><span class="s1">&#39;Rank&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">Xt</span></div></div>
 
@@ -1301,8 +1402,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_estimators</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1234</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">IsolationForest</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="n">n_estimators</span><span class="p">,</span>
-                                     <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_estimators</span> <span class="o">=</span> <span class="n">n_estimators</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
 
 <div class="viewcode-block" id="AppendAnomalyScore.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendAnomalyScore.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1313,9 +1414,12 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_</span> <span class="o">=</span> <span class="n">IsolationForest</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_estimators</span><span class="p">,</span>
+                                      <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -1327,9 +1431,12 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">_check_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
-        <span class="n">Xt</span><span class="p">[</span><span class="s1">&#39;Anomaly_Score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">Xt</span><span class="p">))</span>
+        <span class="n">_check_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_columns_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">Xt</span><span class="p">[</span><span class="s1">&#39;Anomaly_Score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">Xt</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">Xt</span></div></div>
 
 
@@ -1345,8 +1452,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_clusters</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1234</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">,</span>
-                            <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_clusters</span> <span class="o">=</span> <span class="n">n_clusters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
 
 <div class="viewcode-block" id="AppendCluster.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendCluster.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1357,9 +1464,12 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_clusters</span><span class="p">,</span>
+                             <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -1371,9 +1481,12 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">_check_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
-        <span class="n">Xt</span><span class="p">[</span><span class="s1">&#39;Cluster_Number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Xt</span><span class="p">))</span>
+        <span class="n">_check_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_columns_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">Xt</span><span class="p">[</span><span class="s1">&#39;Cluster_Number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Xt</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">Xt</span></div></div>
 
 
@@ -1389,8 +1502,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_clusters</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1234</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">,</span>
-                            <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_clusters</span> <span class="o">=</span> <span class="n">n_clusters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
 
 <div class="viewcode-block" id="AppendClusterDistance.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendClusterDistance.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1401,9 +1514,12 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_clusters</span><span class="p">,</span>
+                             <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -1415,10 +1531,13 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">_check_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
-        <span class="n">df_clusters</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">Xt</span><span class="p">)</span>
-                <span class="p">)</span><span class="o">.</span><span class="n">add_prefix</span><span class="p">(</span><span class="s1">&#39;Cluster_Distance_&#39;</span><span class="p">)</span>
+        <span class="n">_check_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_columns_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">df_clusters</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">Xt</span><span class="p">)</span>
+                 <span class="p">)</span><span class="o">.</span><span class="n">add_prefix</span><span class="p">(</span><span class="s1">&#39;Cluster_Distance_&#39;</span><span class="p">)</span>
         <span class="n">df_clusters</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">Xt</span><span class="o">.</span><span class="n">index</span>
 
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">Xt</span><span class="p">,</span> <span class="n">df_clusters</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -1438,8 +1557,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1234</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span>
-                         <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="o">=</span> <span class="n">n_components</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
 
 <div class="viewcode-block" id="AppendPrincipalComponent.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendPrincipalComponent.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1450,9 +1569,12 @@
 <span class="sd">        :return: fitted object (self)</span>
 <span class="sd">        :rtype: object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_x</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">,</span>
+                          <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -1464,10 +1586,13 @@
 <span class="sd">        :return: Transformed input DataFrame</span>
 <span class="sd">        :rtype: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">_check_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_columns</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
-        <span class="n">df_pca</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">Xt</span><span class="p">)</span>
-                <span class="p">)</span><span class="o">.</span><span class="n">add_prefix</span><span class="p">(</span><span class="s1">&#39;Principal_Component_&#39;</span><span class="p">)</span>
+        <span class="n">_check_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_columns_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">df_pca</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">Xt</span><span class="p">)</span>
+                 <span class="p">)</span><span class="o">.</span><span class="n">add_prefix</span><span class="p">(</span><span class="s1">&#39;Principal_Component_&#39;</span><span class="p">)</span>
         <span class="n">df_pca</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">Xt</span><span class="o">.</span><span class="n">index</span>
 
         <span class="n">Xt</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">Xt</span><span class="p">,</span> <span class="n">df_pca</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
