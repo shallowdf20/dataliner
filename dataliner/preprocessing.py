@@ -519,7 +519,6 @@ class OneHotEncoding(BaseEstimator, TransformerMixin):
         for col in np.setdiff1d(self.new_dummy_cols_, self.dummy_cols_):
             Xt = Xt.drop(col, axis=1)
 
-        columns_order = np.intersect1d(self.dummy_cols_, self.new_dummy_cols_)
         Xt = pd.DataFrame(Xt, columns=self.dummy_cols_)
 
         return Xt
