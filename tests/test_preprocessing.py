@@ -581,3 +581,30 @@ def test_cascaded_encoders():
     _check_equal_rows(X_test, Xt_test)
     
     _check_same_cols_and_order(Xt, Xt_test)
+
+def test_arithmetic_feature_generator():
+    X, X_test, y = _setup()
+
+    operation_candidates = [
+        'add',
+        'subtract',
+        'multiply',
+        'divide'
+    ]
+    metric_candidates = ['roc_auc', 'accuracy']
+
+    for metric in metric_candidates:
+        for operation in operation_candidates:
+            process = make_pipeline(
+                dp.ImputeNaN(),
+                dp.ArithmeticFeatureGenerator(metric=metric,
+                                              operation=operation)
+            )
+
+            Xt = process.fit_transform(X, y)
+            Xt_test = process.transform(X_test)
+            
+            _check_equal_rows(X, Xt)
+            _check_equal_rows(X_test, Xt_test)
+            
+            _check_same_cols_and_order(Xt, Xt_test)

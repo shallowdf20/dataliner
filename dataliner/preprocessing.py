@@ -7,6 +7,7 @@ and feature engineering used during data analysis and machine learning
 process.
 """
 
+import itertools
 import warnings
 
 import numpy as np
@@ -44,6 +45,7 @@ __all__ = [
     'AppendCluster',
     'AppendClusterDistance',
     'AppendPrincipalComponent',
+    'ArithmeticFeatureGenerator'
 ]
 
 
@@ -1468,3 +1470,118 @@ class AppendPrincipalComponent(BaseEstimator, TransformerMixin):
         Xt = pd.concat([Xt, df_pca], axis=1)
 
         return Xt
+
+
+class ArithmeticFeatureGenerator(BaseEstimator, TransformerMixin):
+    """
+    A transformer which recognizes all numerical features and create\
+    new features by multiplying feature pairs. Then newly created features\
+    are evaluated individually by fitting Logistic Regression against\
+    the target variable and only new features with higher eval metric than existing\
+    features will be newly added to the data. Missing values need to be\
+    imputed beforehand.
+
+    :param int max_features: Number of numerical features to test\
+    combinations. If number of numerical features in the data exceeds\
+    this value, transformer will raise an exception. (default=50)
+    :param string metrics: Metrics to evaluate feature. Sklearn default\
+    metrics can be used. (default='roc_auc')
+    :param string operation: Type of arithmetic operations. 'add', \
+    'subtract', 'multiply', 'divide' can be used. (default='multiply')
+    :param float replace_zero: Value to replace 0 when operation='divide'\
+    . Do not use 0 as it may cause ZeroDivisionError.(default=0.001)
+    """
+
+    def __init__(self,
+                 max_features=50,
+                 metric='roc_auc',
+                 operation='multiply',
+                 replace_zero=0.001):
+        self.max_features = max_features
+        self.metric = metric
+        self.operation = operation
+        self.replace_zero = replace_zero
+    
+    def _arithmetic_operation(self, series1, series2, operation):
+        if operation == 'add':
+            return pd.DataFrame(series1 + series2)
+        elif operation == 'subtract':
+            return pd.DataFrame(series1 - series2)
+        elif operation == 'multiply':
+            return pd.DataFrame(series1 * series2)
+        elif operation == 'divide':
+            return pd.DataFrame(np.divide(series1, series2.replace(0, self.replace_zero)))
+        else:
+            raise Exception('Unknown arithmetic operation was specified : ' + operation)
+    
+    def _check_missing(self, df):
+        if df.isna().sum().sum() != 0:
+            raise Exception('Please impute missing values before using this transformer.')
+
+    def fit(self, X, y=None):
+        """
+        Fit transformer by fitting each feature with Logistic\
+        Regression and storing features with eval metrics higher\
+        than the max of existing features.
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Input Series for target variable
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_X_y(X, y)
+
+        self.x_features_ = X.select_dtypes('number').columns
+        self._check_missing(X[self.x_features_])
+        
+        if len(self.x_features_) > self.max_features:
+            raise Exception('Number of numerical features is larger than max_features.')
+
+        cv = StratifiedKFold(n_splits=5)
+        lr = LogisticRegression(penalty='l2', solver='lbfgs')
+        
+        # Firstly find maximum evaluation metric in the existing feature
+        roc_auc_existing = []
+        for feature in self.x_features_:
+            X_lr = X[[feature]].fillna(X[[feature]].mean())
+        
+            roc_auc = cross_val_score(lr, X_lr, y, cv=cv, scoring=self.metric).mean()
+            roc_auc_existing.append(roc_auc)
+        
+        self.max_auc_existing_ = max(roc_auc_existing)
+
+        # Create feature by multiplication and employ if evaluation metric
+        # is larger than the maximum of existing features
+        combinations = list(itertools.combinations(self.x_features_, 2))
+        self.new_pair_ = []
+        for pair in combinations:
+            X_lr = self._arithmetic_operation(X[pair[0]], X[pair[1]], self.operation)
+
+            roc_auc = cross_val_score(lr, X_lr, y, cv=cv, scoring=self.metric).mean()
+            
+            if roc_auc > self.max_auc_existing_:
+                self.new_pair_.append(pair)
+
+        return self
+
+    def transform(self, X):
+        """
+        Transform X by creating new feature using pairs identified during fit.
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        check_is_fitted(self)
+        _check_X(X)
+        self._check_missing(X[self.x_features_])
+
+        Xt = X.copy()
+
+        if not self.new_pair_:
+            return X
+        else:
+            for pair in self.new_pair_:
+                Xt[pair[0] + '_' + self.operation + '_' + pair[1]] = self._arithmetic_operation(
+                        Xt[pair[0]], Xt[pair[1]], self.operation)
+            return Xt
