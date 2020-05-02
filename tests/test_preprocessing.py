@@ -3,6 +3,7 @@ sys.path.append('../dataliner')
 
 import numpy as np
 import pandas as pd
+from sklearn.pipeline import make_pipeline
 
 import preprocessing as dp
 
@@ -499,7 +500,7 @@ def test_append_principal_component():
     Xt = trans.fit_transform(Xt.fillna(0))
 
     assert Xt['Principal_Component_0'].max() == 7.497300874940136
-    assert X.shape[0] == Xt.shape[0]
+    _check_equal_rows(X, Xt)
     assert X.shape[1] == Xt.shape[1] - 5
     
     Xt_test = trans.transform((trans2.transform(X_test.fillna(0))))
@@ -507,3 +508,53 @@ def test_append_principal_component():
     _check_col_exist_in_df(Xt_test, 'Principal_Component_0')
 
     _check_same_cols_and_order(Xt, Xt_test)
+
+
+def test_pipelines():
+    X, X_test, y = _setup()
+
+    ctrans_candidates = [
+        dp.OneHotEncoding(),
+        dp.TargetMeanEncoding(),
+        dp.CountEncoding(),
+        dp.RankedCountEncoding(),
+        dp.FrequencyEncoding(),
+        dp.RankedTargetMeanEncoding(),
+    ]
+
+    scaler_candidates = [
+        dp.StandardScaling(),
+        dp.MinMaxScaling()
+    ]
+
+    for scaler in scaler_candidates:
+        print(scaler)
+        for ctrans in ctrans_candidates:
+            print(ctrans)
+            process = make_pipeline(
+                dp.DropColumns(drop_columns="PassengerId"),
+                dp.DropNoVariance(),
+                dp.GroupRareCategory(),
+                dp.ClipData(),
+                dp.DropHighCardinality(),
+                dp.BinarizeNaN(),
+                dp.CountRowNaN(),
+                dp.ImputeNaN(),
+                ctrans,
+                dp.DropHighCorrelation(),
+                scaler,
+                dp.AppendAnomalyScore(),
+                dp.AppendCluster(),
+                dp.AppendClusterDistance(),
+                dp.AppendPrincipalComponent(),
+                dp.DropHighCorrelation(),
+                dp.DropLowAUC(),
+            )
+
+            Xt = process.fit_transform(X, y)
+            Xt_test = process.transform(X_test)
+            
+            _check_equal_rows(X, Xt)
+            _check_equal_rows(X_test, Xt_test)
+            
+            _check_same_cols_and_order(Xt, Xt_test)
