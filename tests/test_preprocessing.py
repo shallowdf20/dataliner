@@ -1,11 +1,14 @@
-import sys
-sys.path.append('../dataliner')
-
 import numpy as np
 import pandas as pd
 from sklearn.pipeline import make_pipeline
 
-import preprocessing as dp
+PACKAGE_TEST = False
+if PACKAGE_TEST:
+    import dataliner as dp
+else:
+    import sys
+    sys.path.append('../dataliner')
+    import preprocessing as dp
 
 
 TRAIN_DATA = 'titanic_train.csv'
@@ -334,7 +337,6 @@ def test_min_max_scaling():
     _check_same_cols_and_order(Xt, Xt_test)
 
 
-
 def test_count_encoding():
     X, X_test, _ = _setup()
     trans = dp.CountEncoding()
@@ -528,9 +530,7 @@ def test_pipelines():
     ]
 
     for scaler in scaler_candidates:
-        print(scaler)
         for ctrans in ctrans_candidates:
-            print(ctrans)
             process = make_pipeline(
                 dp.DropColumns(drop_columns="PassengerId"),
                 dp.DropNoVariance(),
@@ -541,6 +541,7 @@ def test_pipelines():
                 dp.CountRowNaN(),
                 dp.ImputeNaN(),
                 ctrans,
+                dp.DropNoVariance(),
                 dp.DropHighCorrelation(),
                 scaler,
                 dp.AppendAnomalyScore(),
@@ -558,3 +559,25 @@ def test_pipelines():
             _check_equal_rows(X_test, Xt_test)
             
             _check_same_cols_and_order(Xt, Xt_test)
+
+
+def test_cascaded_encoders():
+    X, X_test, y = _setup()
+
+    process = make_pipeline(
+        dp.ImputeNaN(),
+        dp.OneHotEncoding(),
+        dp.TargetMeanEncoding(),
+        dp.CountEncoding(),
+        dp.RankedCountEncoding(),
+        dp.FrequencyEncoding(),
+        dp.RankedTargetMeanEncoding(),
+    )
+    
+    Xt = process.fit_transform(X, y)
+    Xt_test = process.transform(X_test)
+    
+    _check_equal_rows(X, Xt)
+    _check_equal_rows(X_test, Xt_test)
+    
+    _check_same_cols_and_order(Xt, Xt_test)
