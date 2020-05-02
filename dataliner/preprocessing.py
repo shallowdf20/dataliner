@@ -137,8 +137,7 @@ class DropColumns(BaseEstimator, TransformerMixin):
         if self.drop_columns is None:
             return X
         else:
-            drop_columns = np.intersect1d(self.drop_columns, X.columns)
-            Xt = X.drop(drop_columns, axis=1)
+            Xt = X.drop(self.drop_columns, axis=1)
             return Xt
 
 
@@ -183,10 +182,14 @@ class DropNoVariance(BaseEstimator, TransformerMixin):
         check_is_fitted(self)
         _check_X(X)
 
-        if self.drop_columns_ is None:
+        if self.drop_columns_ is not None:
+            drop_columns = np.intersect1d(self.drop_columns_, X.columns)
+        else:
+            drop_columns = self.drop_columns_
+
+        if drop_columns is None:
             return X
         else:
-            drop_columns = np.intersect1d(self.drop_columns_, X.columns)
             Xt = X.drop(drop_columns, axis=1)
             return Xt
 
@@ -238,10 +241,14 @@ class DropHighCardinality(BaseEstimator, TransformerMixin):
         check_is_fitted(self)
         _check_X(X)
 
-        if self.drop_columns_ is None:
+        if self.drop_columns_ is not None:
+            drop_columns = np.intersect1d(self.drop_columns_, X.columns)
+        else:
+            drop_columns = self.drop_columns_
+
+        if drop_columns is None:
             return X
         else:
-            drop_columns = np.intersect1d(self.drop_columns_, X.columns)
             Xt = X.drop(drop_columns, axis=1)
             return Xt
 
@@ -311,10 +318,14 @@ class DropLowAUC(BaseEstimator, TransformerMixin):
         check_is_fitted(self)
         _check_X(X)
 
-        if self.drop_columns_ is None:
+        if self.drop_columns_ is not None:
+            drop_columns = np.intersect1d(self.drop_columns_, X.columns)
+        else:
+            drop_columns = self.drop_columns_
+
+        if drop_columns is None:
             return X
         else:
-            drop_columns = np.intersect1d(self.drop_columns_, X.columns)
             Xt = X.drop(drop_columns, axis=1)
             return Xt
 
@@ -373,6 +384,7 @@ class DropHighCorrelation(BaseEstimator, TransformerMixin):
                         self.drop_columns_ = np.append(self.drop_columns_, col)
 
         self.drop_columns_ = np.unique(self.drop_columns_)
+
         return self
 
     def transform(self, X):
@@ -386,10 +398,14 @@ class DropHighCorrelation(BaseEstimator, TransformerMixin):
         check_is_fitted(self)
         _check_X(X)
 
-        if self.drop_columns_ is None:
+        if self.drop_columns_[0] is not None:
+            drop_columns = np.intersect1d(self.drop_columns_, X.columns)
+        else:
+            drop_columns = self.drop_columns_[0]
+
+        if drop_columns is None:
             return X
         else:
-            drop_columns = np.intersect1d(self.drop_columns_, X.columns)
             Xt = X.drop(drop_columns, axis=1)
             return Xt
 
