@@ -1475,10 +1475,10 @@ class AppendPrincipalComponent(BaseEstimator, TransformerMixin):
 class ArithmeticFeatureGenerator(BaseEstimator, TransformerMixin):
     """
     A transformer which recognizes all numerical features and create\
-    new features by multiplying feature pairs. Then newly created features\
+    new features by arithmetic operation. Newly created features\
     are evaluated individually by fitting Logistic Regression against\
-    the target variable and only new features with higher eval metric than existing\
-    features will be newly added to the data. Missing values need to be\
+    the target variable and only new features with higher eval metric than feature\
+    pairs will be newly added to the data. Missing values need to be\
     imputed beforehand.
 
     :param int max_features: Number of numerical features to test\
@@ -1541,14 +1541,12 @@ class ArithmeticFeatureGenerator(BaseEstimator, TransformerMixin):
         lr = LogisticRegression(penalty='l2', solver='lbfgs')
         
         # Firstly find maximum evaluation metric in the existing feature
-        roc_auc_existing = []
+        roc_auc_existing = {}
         for feature in self.x_features_:
             X_lr = X[[feature]].fillna(X[[feature]].mean())
         
             roc_auc = cross_val_score(lr, X_lr, y, cv=cv, scoring=self.metric).mean()
-            roc_auc_existing.append(roc_auc)
-        
-        self.max_auc_existing_ = max(roc_auc_existing)
+            roc_auc_existing[feature] = roc_auc
 
         # Create feature by multiplication and employ if evaluation metric
         # is larger than the maximum of existing features
@@ -1558,8 +1556,10 @@ class ArithmeticFeatureGenerator(BaseEstimator, TransformerMixin):
             X_lr = self._arithmetic_operation(X[pair[0]], X[pair[1]], self.operation)
 
             roc_auc = cross_val_score(lr, X_lr, y, cv=cv, scoring=self.metric).mean()
-            
-            if roc_auc > self.max_auc_existing_:
+            max_auc_pair = max(roc_auc_existing[pair[0]],
+                               roc_auc_existing[pair[1]])
+
+            if roc_auc > max_auc_pair:
                 self.new_pair_.append(pair)
 
         return self
