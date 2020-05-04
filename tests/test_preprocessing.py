@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.pipeline import make_pipeline
+from sklearn.ensemble import RandomForestClassifier
 
 PACKAGE_TEST = False
 if PACKAGE_TEST:
@@ -11,17 +12,8 @@ else:
     import preprocessing as dp
 
 
-TRAIN_DATA = 'titanic_train.csv'
-TEST_DATA = 'titanic_test.csv'
-TARGET_NAME = 'Survived'
-
-
 def _setup():
-    df = pd.read_csv(TRAIN_DATA)
-    X_test = pd.read_csv(TEST_DATA)
-    X = df.drop(TARGET_NAME, axis=1)
-    y = df[TARGET_NAME]
-    return X, X_test, y
+    return dp.load_titanic()
 
 
 def _check_equal_rows(df1, df2):
@@ -608,3 +600,132 @@ def test_arithmetic_feature_generator():
             _check_equal_rows(X_test, Xt_test)
             
             _check_same_cols_and_order(Xt, Xt_test)
+
+
+def test_ranked_evaluation_metric_encoding():
+    X, X_test, y = _setup()
+    trans = dp.RankedEvaluationMetricEncoding()
+
+    Xt = trans.fit_transform(X, y)
+
+    assert trans.dic_corr_['Embarked']['Evaluation_Metric']['C'] == 0.5677581666165397
+    assert trans.dic_corr_['Embarked']['Evaluation_Metric']['S'] == 0.5717079343613284
+    assert trans.dic_corr_['Embarked']['Evaluation_Metric']['Q'] == 0.47286784881120747
+    assert trans.dic_corr_['Embarked']['Evaluation_Metric']['_Missing'] == 0.5028985507246377
+
+
+    _check_equal_rows(X, Xt)
+    _check_equal_cols(X, Xt)
+
+    Xt_test = trans.transform(X_test)
+    _check_equal_rows(X_test, Xt_test)
+    _check_equal_cols(X_test, Xt_test)
+
+    _check_same_cols_and_order(Xt, Xt_test)
+
+
+def test_append_classification_model():
+    X, X_test, y = _setup()
+
+    probability_candidates = [True, False]
+
+    for probability in probability_candidates:
+        trans = dp.AppendClassificationModel(model=RandomForestClassifier(),
+                probability=probability)
+
+        process = make_pipeline(
+            dp.ImputeNaN(),
+            dp.TargetMeanEncoding(),
+            trans
+        )
+
+        Xt = process.fit_transform(X, y)
+        _check_equal_rows(X, Xt)
+        _check_col_exist_in_df(Xt, 'Predicted_RandomForestClassifier')
+
+        Xt_test = process.transform(X_test)
+        _check_equal_rows(X_test, Xt_test)
+        _check_same_cols_and_order(Xt, Xt_test)
+
+
+def test_append_encoder():
+    X, X_test, y = _setup()
+
+    encoder_candidates = [
+        dp.TargetMeanEncoding(),
+        dp.CountEncoding(),
+        dp.RankedCountEncoding(),
+        dp.FrequencyEncoding(),
+        dp.RankedTargetMeanEncoding(),
+        dp.RankedEvaluationMetricEncoding(),
+    ]
+
+    for encoder in encoder_candidates:
+        correct_col_no = 16
+        trans = dp.AppendEncoder(encoder)
+        Xt = trans.fit_transform(X, y)
+
+        _check_equal_rows(X, Xt)
+        _check_number_of_cols_equal(Xt, correct_col_no)
+
+        Xt_test = trans.transform(X_test)
+        _check_equal_rows(X_test, Xt_test)
+        _check_number_of_cols_equal(Xt_test, correct_col_no)
+
+        _check_same_cols_and_order(Xt, Xt_test)
+
+    trans = dp.AppendEncoder(dp.OneHotEncoding())
+    correct_col_no = 1736
+    Xt = trans.fit_transform(X, y)
+
+    _check_equal_rows(X, Xt)
+    _check_number_of_cols_equal(Xt, correct_col_no)
+
+    Xt_test = trans.transform(X_test)
+    _check_equal_rows(X_test, Xt_test)
+    _check_number_of_cols_equal(Xt_test, correct_col_no)
+
+    _check_same_cols_and_order(Xt, Xt_test)
+
+
+def test_append_cluster_target_mean():
+    X, X_test, y = _setup()
+    
+    process = make_pipeline(
+        dp.ImputeNaN(),
+        dp.TargetMeanEncoding(),
+        dp.AppendClusterTargetMean()
+    )
+
+    Xt = process.fit_transform(X, y)
+
+    _check_equal_rows(X, Xt)
+    _check_number_of_cols_equal(Xt, 12)
+    _check_col_exist_in_df(Xt, 'cluster_mean')
+
+    Xt_test = process.transform(X_test)
+    _check_equal_rows(X_test, Xt_test)
+    _check_number_of_cols_equal(Xt_test, 12)
+
+    _check_same_cols_and_order(Xt, Xt_test)
+
+
+def test_permutation_importance_test():
+    X, X_test, y = _setup()
+    
+    process = make_pipeline(
+        dp.ImputeNaN(),
+        dp.TargetMeanEncoding(),
+        dp.PermutationImportanceTest()
+    )
+
+    Xt = process.fit_transform(X, y)
+
+    _check_equal_rows(X, Xt)
+    _check_col_does_not_exist_in_df(Xt, 'Name')
+    _check_col_does_not_exist_in_df(Xt, 'PassengerId')
+
+    Xt_test = process.transform(X_test)
+    _check_equal_rows(X_test, Xt_test)
+
+    _check_same_cols_and_order(Xt, Xt_test)

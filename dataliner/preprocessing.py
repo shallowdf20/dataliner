@@ -8,6 +8,7 @@ process.
 """
 
 import itertools
+import os
 import warnings
 
 import numpy as np
@@ -15,9 +16,11 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from sklearn.ensemble import IsolationForest
+from sklearn.ensemble import IsolationForest, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_val_score, StratifiedKFold
+from sklearn.pipeline import make_pipeline
 from sklearn.utils.validation import check_is_fitted
 
 
@@ -45,7 +48,12 @@ __all__ = [
     'AppendCluster',
     'AppendClusterDistance',
     'AppendPrincipalComponent',
-    'ArithmeticFeatureGenerator'
+    'ArithmeticFeatureGenerator', # from 1.2
+    'RankedEvaluationMetricEncoding', # from 1.2
+    'AppendClassificationModel', # from 1.2
+    'AppendEncoder', # from 1.2
+    'AppendClusterTargetMean', # from 1.2
+    'PermutationImportanceTest' # from 1.2
 ]
 
 
@@ -83,7 +91,36 @@ def _check_fit(list1, list2):
     else:
         raise ValueError("Columns are different from when fitted. For\
                 preprocess with model transforming such as Isolation\
-                Forest or KMeans, require the columns to be same.")
+                Forest or KMeans, it require the columns to be same.")
+
+
+def _check_binary(y):
+    if len(y.unique()) == 2:
+        pass
+    else:
+        raise Exception("This class can only be used for Binary Classification")
+
+
+def _check_method_implemented(model, method_str):
+    if method_str in dir(model):
+        pass
+    else:
+        raise Exception(method_str + ' is not implemented in the specified model')
+
+
+def load_titanic():
+    """
+    Load train and test data for titanic datasets.
+
+    :return: train_features, train_target, test_features
+    :rtype: pandas.DataFrame, pandas.Series, pandas.DataFrame
+    """
+    path = os.path.dirname(__file__)
+    df = pd.read_csv(path + '/datasets/titanic_train.csv')
+    X_test = pd.read_csv(path + '/datasets/titanic_test.csv')
+    X = df.drop('Survived', axis=1)
+    y = df['Survived']
+    return X, X_test, y
 
 
 class DropColumns(BaseEstimator, TransformerMixin):
@@ -283,6 +320,7 @@ class DropLowAUC(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X_y(X, y)
+        _check_binary(y)
 
         self.drop_columns_ = None
 
@@ -514,6 +552,7 @@ class OneHotEncoding(BaseEstimator, TransformerMixin):
         _check_X(X)
 
         self.dummy_cols_ = pd.get_dummies(X, drop_first=self.drop_first).columns
+        self.cat_columns_ = X.select_dtypes(exclude='number').columns
         return self
 
     def transform(self, X):
@@ -1484,7 +1523,7 @@ class ArithmeticFeatureGenerator(BaseEstimator, TransformerMixin):
     :param int max_features: Number of numerical features to test\
     combinations. If number of numerical features in the data exceeds\
     this value, transformer will raise an exception. (default=50)
-    :param string metrics: Metrics to evaluate feature. Sklearn default\
+    :param string metric: Metrics to evaluate feature. Sklearn default\
     metrics can be used. (default='roc_auc')
     :param string operation: Type of arithmetic operations. 'add', \
     'subtract', 'multiply', 'divide' can be used. (default='multiply')
@@ -1530,6 +1569,7 @@ class ArithmeticFeatureGenerator(BaseEstimator, TransformerMixin):
         :rtype: object
         """
         _check_X_y(X, y)
+        _check_binary(y)
 
         self.x_features_ = X.select_dtypes('number').columns
         self._check_missing(X[self.x_features_])
@@ -1584,4 +1624,393 @@ class ArithmeticFeatureGenerator(BaseEstimator, TransformerMixin):
             for pair in self.new_pair_:
                 Xt[pair[0] + '_' + self.operation + '_' + pair[1]] = self._arithmetic_operation(
                         Xt[pair[0]], Xt[pair[1]], self.operation)
+            return Xt
+
+
+class RankedEvaluationMetricEncoding(BaseEstimator, TransformerMixin):
+    """
+    Encode categorical columns by firstly creating dummy variable, then\
+    LogisticRegression against target variable is fitted\
+    for each of the dummy variables. Evaluation metric such as accuracy\
+    or roc_auc is calculated and ranked. Finally, categories are encoded\
+    with its rank. It is strongly recommended to conduct DropHighCardinality\
+    or GroupRareCategory before using this encoding as this encoder will\
+    fit Logistic Regression for ALL categories with 5-fold.
+
+    :param string metric: Metrics to evaluate feature. Sklearn default\
+    metrics can be used. (default='roc_auc')
+    """
+
+    def __init__(self, metric='roc_auc'):
+        self.metric = metric
+
+    def fit(self, X, y=None):
+        """
+        Fit transformer by creating dummy variable and fitting \
+        LogisticRegression.
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Input Series for target variable
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_X_y(X, y)
+        _check_binary(y)
+
+        self.cat_columns_ = X.select_dtypes(exclude='number').columns
+        
+        cv = StratifiedKFold(n_splits=5)
+        lr = LogisticRegression(penalty='l2', solver='lbfgs')
+
+        self.dic_corr_ = {}
+        for feature in self.cat_columns_:
+            X_lr = pd.get_dummies(X[[feature]].fillna('_Missing'))
+            df_map = pd.DataFrame([])
+            for col in X_lr.columns:
+                eval_metric = cross_val_score(lr, X_lr[[col]], y, cv=cv, scoring=self.metric).mean()
+                df_map = pd.concat([df_map, pd.DataFrame([col.replace(feature + '_', ''),
+                        eval_metric]).T], axis=0)
+            df_map.columns = ['Category', 'Evaluation_Metric']
+
+            df_map = df_map.sort_values('Evaluation_Metric'
+                    , ascending=False).reset_index(drop=True).reset_index()
+            df_map = df_map.rename(columns={'index':'Rank'})
+            df_map['Rank'] += 1
+            df_map = df_map.set_index('Category')
+
+            self.dic_corr_[feature] = df_map
+
+        return self
+
+    def transform(self, X):
+        """
+        Transform X by replacing categories with its evaluation metric
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        check_is_fitted(self)
+        _check_X(X)
+
+        Xt = X.copy()
+        
+        encode_columns = np.intersect1d(self.cat_columns_, Xt.columns)
+        
+        for col in encode_columns:
+            df_map = self.dic_corr_[col]
+            df_map = df_map[['Rank']]
+            Xt[col] = Xt[[col]].fillna('_Missing').join(df_map, on=col).drop(col, axis=1)
+            Xt[col] = Xt[col].fillna(0)
+
+        return Xt
+
+
+class AppendClassificationModel(BaseEstimator, TransformerMixin):
+    """
+    Append prediction from model as a new feature. Model must have\
+    fit and predict methods and it should only predict a single\
+    label. In case the model has a predict_proba method, option\
+    probability can be used to append class probability instead\
+    of class labels. predict_proba method must return class\
+    probability for 0 as first column and 1 as second column.
+
+    :param object model: Any model that is in line with sklearn \
+    classification model, meaning it implements fit and predict.\
+    (default=None)
+    :param bool probability: Whether to class probability instead \
+    of class labels. If True, model must have predict_proba method\
+    implemented.(default=False)
+    """
+
+    def __init__(self, model=None, probability=False):
+        self.model = model
+        self.probability = probability
+
+    def fit(self, X, y=None):
+        """
+        Fit transformer by fitting model specified.
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Input Series for target variable
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_X_y(X, y)
+        _check_binary(y)
+
+        self.model_ = self.model
+        _check_method_implemented(self.model_, 'fit')
+        _check_method_implemented(self.model_, 'predict')
+        
+        if self.probability:
+            _check_method_implemented(self.model_, 'predict_proba')
+
+        self.model_.fit(X, y)
+        self.fit_columns_ = X.columns
+
+        return self
+
+    def transform(self, X):
+        """
+        Transform X by predicting with fitted model.
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        check_is_fitted(self)
+        _check_X(X)
+
+        Xt = X.copy()
+        _check_fit(self.fit_columns_, Xt.columns)
+        
+        if self.probability:
+            try:
+                y_pred = self.model_.predict_proba(Xt)[:, 1]
+            except:
+                y_pred = self.model_.predict_proba(Xt)
+        else:
+            y_pred = self.model_.predict(Xt)
+        
+        pred_name = 'Predicted_' + type(self.model_).__name__
+
+        Xt[pred_name] = y_pred
+
+        return Xt
+
+
+class AppendEncoder(BaseEstimator, TransformerMixin):
+    """
+    Append encoders in the DataLiner module. Encoders in DataLiner\
+    will automatically replace categorical values, but by wrapping\
+    DataLiner Encoders with this class, encoded results will be\
+    appended as a new feature and original categorical columns\
+    will remain. Regardless of whether the Encoder will require\
+    target column or not, this class will require target column.
+
+    :param object encoder: DataLiner Encoders.(default=None)
+    """
+
+    def __init__(self, encoder=None):
+        self.encoder = encoder
+
+    def fit(self, X, y=None):
+        """
+        Fit transformer by fitting encoder specified
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Input Series for target variable
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_X(X)
+        if y is not None:
+            _check_X_y(X, y)
+
+        self.encoder_ = self.encoder
+
+        self.encoder_.fit(X, y)
+        self.fit_columns_ = X.columns
+
+        return self
+
+    def transform(self, X):
+        """
+        Transform X by appending encoded category
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        check_is_fitted(self)
+        _check_X(X)
+
+        Xt = X.copy()
+        _check_fit(self.fit_columns_, Xt.columns)
+
+        name = '_' + type(self.encoder_).__name__
+
+        if name == '_OneHotEncoding':
+            Xa = self.encoder_.transform(X[self.encoder_.cat_columns_]
+                    ).add_suffix(name)
+        else:
+            Xa = self.encoder_.transform(X
+                    )[self.encoder_.cat_columns_].add_suffix(name)
+
+        Xt = pd.concat([Xt, Xa], axis=1)
+
+        return Xt
+
+
+class AppendClusterTargetMean(BaseEstimator, TransformerMixin):
+    """
+    Append cluster number obtained from kmeans++ clustering.\
+    Then each cluster number is replaced with target mean.\
+    For clustering categorical variables need to be converted\
+    to numerical data.
+
+    :param int n_clusters: Number of clusters (default=8)
+    :param int random_state: random_state for KMeans \
+        (default=1234)
+    """
+
+    def __init__(self, n_clusters=8, random_state=1234):
+        self.n_clusters = n_clusters
+        self.random_state = random_state
+
+    def _sigmoid(self, count, k=0, f=1):
+        return 1 / (1 + np.exp(- (count - k) / f))
+
+    def fit(self, X, y=None):
+        """
+        Fit KMeans Clustering and obtain target mean
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Ignored. (default=None)
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_X(X)
+        _check_X_y(X, y)
+
+        global_mean = y.mean()
+        self.global_mean_ = global_mean
+
+        self.model_ = KMeans(n_clusters=self.n_clusters,
+                             random_state=self.random_state)
+        self.model_.fit(X)
+        self.fit_columns_ = X.columns
+        
+        cluster = self.model_.predict(X)
+        df_cluster = pd.concat([pd.DataFrame(cluster),
+                                  pd.DataFrame(y)], axis=1)
+        df_cluster.columns = ['Cluster_Number', 'Target']
+
+        mean = df_cluster.groupby('Cluster_Number').mean().rename(
+            columns={'Target':'target_mean'})
+        count = df_cluster.groupby('Cluster_Number').count().rename(
+            columns={'Target':'count'})
+        df_map = pd.concat([mean, count], axis=1)
+        lambda_ = self._sigmoid(df_map['count'])
+        df_map['smoothed_target_mean'] = lambda_ * df_map[
+                    'target_mean'] + (1 - lambda_) * global_mean
+        df_map.loc[df_map['count'] == 1,
+                'smoothed_target_mean'] = global_mean
+        self.cluster_target_mean_ = df_map
+
+        return self
+
+    def transform(self, X):
+        """
+        Transform X by appending cluster mean
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        check_is_fitted(self)
+        _check_X(X)
+
+        Xt = X.copy()
+        _check_fit(self.fit_columns_, Xt.columns)
+        Xc = pd.DataFrame(self.model_.predict(Xt)).rename(columns={0:'Cluster_Number'})
+        
+        df_map = self.cluster_target_mean_
+        df_map = df_map[['smoothed_target_mean']]
+        Xc = Xc.join(df_map, on='Cluster_Number').drop('Cluster_Number', axis=1)
+        Xc = Xc.fillna(0)
+
+        Xt = pd.concat([Xt, Xc.rename(columns={'smoothed_target_mean':'cluster_mean'})], axis=1)
+
+        return Xt
+
+
+class PermutationImportanceTest(BaseEstimator, TransformerMixin):
+    """
+    Conduct permutation importance tests on features and drop features\
+    that are not effective. Basically it will firstly fit entire data,\
+    then randomly shuffle each feature's data and evaluate the metrics\
+    for both cases. If shuffled case has no difference in the evaluation\
+    then that means the feature is not effective in prediction.
+
+    :param float threshold: Average difference in roc_auc between original\
+    and shuffled dataset. Higher the value, more features will be dropped.\
+    (default=0.0001)
+    """
+
+    def __init__(self, threshold=0.0001):
+        self.threshold = threshold
+
+    def fit(self, X, y=None):
+        """
+        Conduct permutation importance test and store drop features.
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Ignored. (default=None)
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_X_y(X, y)
+        _check_binary(y)
+
+        process = make_pipeline(ImputeNaN(), TargetMeanEncoding())
+        cv = StratifiedKFold(n_splits=5)
+        clf = RandomForestClassifier(n_estimators=300, max_depth=5, random_state=1234)
+
+        Xt = process.fit_transform(X, y)
+        metrics = np.array([])
+
+        feature_metrics_dic = {}
+        for feature in X.columns:
+            feature_metrics_dic[feature] = np.array([])
+
+        for train_idx, valid_idx in cv.split(Xt, y):
+            X_train, X_valid, y_train, y_valid = \
+                    Xt.iloc[train_idx], Xt.iloc[valid_idx], y.iloc[train_idx], y.iloc[valid_idx]
+            
+            clf.fit(X_train, y_train)
+            y_pred = clf.predict_proba(X_valid)[:, 1]
+            metrics = np.append(metrics, roc_auc_score(y_valid, y_pred))
+            
+            for feature in X.columns:
+                X_valid2 = X_valid.copy()
+                X_shuffled = X_valid2[feature].sample(frac=1, random_state=1234)
+                X_shuffled.index = X_valid2.index
+                X_valid2[feature] = X_shuffled.copy()
+                y_pred_shuffled = clf.predict_proba(X_valid2)[:, 1]
+                feature_metrics_dic[feature] = np.append(feature_metrics_dic[feature],
+                                                        roc_auc_score(y_valid, y_pred_shuffled))
+
+        base_metric = metrics.mean()
+        for feature in X.columns:
+            feature_metrics_dic[feature] = base_metric - feature_metrics_dic[feature].mean()
+
+        self.drop_columns_ = []
+        for key, value in feature_metrics_dic.items():
+            if value <= self.threshold:
+                self.drop_columns_.append(key)
+
+        return self
+
+    def transform(self, X):
+        """
+        Transform X by dropping columns specified in drop_columns
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        check_is_fitted(self)
+        _check_X(X)
+
+        if self.drop_columns_ is not None:
+            drop_columns = np.intersect1d(self.drop_columns_, X.columns)
+        else:
+            drop_columns = self.drop_columns_
+
+        if drop_columns is None:
+            return X
+        else:
+            Xt = X.drop(drop_columns, axis=1)
             return Xt
