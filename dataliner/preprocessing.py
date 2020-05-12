@@ -34,7 +34,6 @@ __all__ = [
     'OneHotEncoding',
     'BinarizeNaN',
     'CountRowNaN',
-    'StandardizeData',
     'ClipData',
     'GroupRareCategory',
     'TargetMeanEncoding',
@@ -48,12 +47,14 @@ __all__ = [
     'AppendCluster',
     'AppendClusterDistance',
     'AppendPrincipalComponent',
-    'ArithmeticFeatureGenerator', # from 1.2
+    'AppendArithmeticFeatures', # from 1.2
     'RankedEvaluationMetricEncoding', # from 1.2
     'AppendClassificationModel', # from 1.2
     'AppendEncoder', # from 1.2
     'AppendClusterTargetMean', # from 1.2
-    'PermutationImportanceTest' # from 1.2
+    'PermutationImportanceTest', # from 1.2
+    'UnionAppend', # from 1.3
+    'load_titanic', # from 1.3
 ]
 
 
@@ -670,64 +671,6 @@ class CountRowNaN(BaseEstimator, TransformerMixin):
         check_columns = np.intersect1d(self.cols_, Xt.columns)
 
         Xt['NaN_Totals'] = Xt[check_columns].isna().sum(axis=1)
-        return Xt
-
-
-class StandardizeData(BaseEstimator, TransformerMixin):
-    """
-    Standardize datasets to have mean = 0 and std = 1.\
-    Note this will only standardize numerical data\
-    and ignore missing values during computation.\
-    Deprecated in version 1.1.0 and will be removed in \
-    version 1.3.0. Please use StandardScaling instead.
-    """
-
-    def __init__(self):
-        warnings.warn("Deprecated in version 1.1.0 and will be\
- removed in version 1.3.0. Please use StandardScaling instead."
-, FutureWarning)
-
-    def fit(self, X, y=None):
-        """
-        Fit transformer to get mean and std for each\
-        numerical features.
-
-        :param pandas.DataFrame X: Input dataframe
-        :param pandas.Series y: Ignored. (default=None)
-        :return: fitted object (self)
-        :rtype: object
-        """
-        _check_X(X)
-
-        self.num_columns_ = X.select_dtypes('number').columns
-        
-        self.dic_mean_ = {}
-        self.dic_std_ = {}
-        for col in self.num_columns_:
-            self.dic_mean_[col] = X[col].mean()
-            self.dic_std_[col] = X[col].std()
-        return self
-
-    def transform(self, X):
-        """
-        Transform by subtracting mean and dividing by std.
-
-        :param pandas.DataFrame X: Input dataframe
-        :return: Transformed input DataFrame
-        :rtype: pandas.DataFrame
-        """
-        check_is_fitted(self)
-        _check_X(X)
-
-        Xt = X.copy()
-        
-        standardize_columns = np.intersect1d(self.num_columns_, Xt.columns)
-        for col in standardize_columns:
-            if self.dic_std_[col] == 0:
-                pass
-            else:
-                Xt[col] = (Xt[col] - self.dic_mean_[col]) / self.dic_std_[col]
-        
         return Xt
 
 
@@ -1511,7 +1454,7 @@ class AppendPrincipalComponent(BaseEstimator, TransformerMixin):
         return Xt
 
 
-class ArithmeticFeatureGenerator(BaseEstimator, TransformerMixin):
+class AppendArithmeticFeatures(BaseEstimator, TransformerMixin):
     """
     A transformer which recognizes all numerical features and create\
     new features by arithmetic operation. Newly created features\
@@ -2014,3 +1957,59 @@ class PermutationImportanceTest(BaseEstimator, TransformerMixin):
         else:
             Xt = X.drop(drop_columns, axis=1)
             return Xt
+
+
+class UnionAppend(BaseEstimator, TransformerMixin):
+    """
+    Concatenates features extracted from original input data by AppendXXX\
+    in the DataLiner package. Normally by applying AppendXXX in pipeline\
+    input data will be treated in series and therefore appended feature\
+    will be used in the next AppendXXX. By wrapping list of AppendXXX with\
+    this class, append features will be processed in parallel and therefore\
+    each AppendXXX class will only use the original input features.
+
+    :param list append_list: List of AppendXXX in DataLiner package. \
+    (default=None)
+    """
+
+    def __init__(self, append_list=None):
+        self.append_list = append_list
+
+    def fit(self, X, y=None):
+        """
+        Fit transformer by verifying AppendXXX specified.
+
+        :param pandas.DataFrame X: Input dataframe
+        :param pandas.Series y: Ignored. (default=None)
+        :return: fitted object (self)
+        :rtype: object
+        """
+        _check_X(X)
+        self.append_list_ = self.append_list
+
+        if not self.append_list_:
+            raise Exception("Please specify list of AppendXXX from DataLiner class.")
+
+        for trans in self.append_list_:
+            trans.fit(X, y)
+
+        return self
+
+    def transform(self, X):
+        """
+        Transform X by transforming X in parallel and appending to original input data.
+
+        :param pandas.DataFrame X: Input dataframe
+        :return: Transformed input DataFrame
+        :rtype: pandas.DataFrame
+        """
+        check_is_fitted(self)
+        _check_X(X)
+        Xt = X.copy()
+
+        for trans in self.append_list_:
+            X_ap = trans.transform(X)
+            append_col = np.setdiff1d(X_ap.columns, X.columns)
+            Xt = pd.concat([Xt, X_ap[append_col]], axis=1)
+
+        return Xt
