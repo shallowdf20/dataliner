@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -180,7 +180,6 @@
     <span class="s1">&#39;OneHotEncoding&#39;</span><span class="p">,</span>
     <span class="s1">&#39;BinarizeNaN&#39;</span><span class="p">,</span>
     <span class="s1">&#39;CountRowNaN&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;StandardizeData&#39;</span><span class="p">,</span>
     <span class="s1">&#39;ClipData&#39;</span><span class="p">,</span>
     <span class="s1">&#39;GroupRareCategory&#39;</span><span class="p">,</span>
     <span class="s1">&#39;TargetMeanEncoding&#39;</span><span class="p">,</span>
@@ -194,12 +193,14 @@
     <span class="s1">&#39;AppendCluster&#39;</span><span class="p">,</span>
     <span class="s1">&#39;AppendClusterDistance&#39;</span><span class="p">,</span>
     <span class="s1">&#39;AppendPrincipalComponent&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;ArithmeticFeatureGenerator&#39;</span><span class="p">,</span> <span class="c1"># from 1.2</span>
+    <span class="s1">&#39;AppendArithmeticFeatures&#39;</span><span class="p">,</span> <span class="c1"># from 1.2</span>
     <span class="s1">&#39;RankedEvaluationMetricEncoding&#39;</span><span class="p">,</span> <span class="c1"># from 1.2</span>
     <span class="s1">&#39;AppendClassificationModel&#39;</span><span class="p">,</span> <span class="c1"># from 1.2</span>
     <span class="s1">&#39;AppendEncoder&#39;</span><span class="p">,</span> <span class="c1"># from 1.2</span>
     <span class="s1">&#39;AppendClusterTargetMean&#39;</span><span class="p">,</span> <span class="c1"># from 1.2</span>
-    <span class="s1">&#39;PermutationImportanceTest&#39;</span> <span class="c1"># from 1.2</span>
+    <span class="s1">&#39;PermutationImportanceTest&#39;</span><span class="p">,</span> <span class="c1"># from 1.2</span>
+    <span class="s1">&#39;UnionAppend&#39;</span><span class="p">,</span> <span class="c1"># from 1.3</span>
+    <span class="s1">&#39;load_titanic&#39;</span><span class="p">,</span> <span class="c1"># from 1.3</span>
 <span class="p">]</span>
 
 
@@ -254,7 +255,7 @@
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">method_str</span> <span class="o">+</span> <span class="s1">&#39; is not implemented in the specified model&#39;</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">load_titanic</span><span class="p">():</span>
+<div class="viewcode-block" id="load_titanic"><a class="viewcode-back" href="../preprocessing.html#preprocessing.load_titanic">[docs]</a><span class="k">def</span> <span class="nf">load_titanic</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Load train and test data for titanic datasets.</span>
 
@@ -266,7 +267,7 @@
     <span class="n">X_test</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;/datasets/titanic_test.csv&#39;</span><span class="p">)</span>
     <span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;Survived&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Survived&#39;</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y</span>
+    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y</span></div>
 
 
 <div class="viewcode-block" id="DropColumns"><a class="viewcode-back" href="../preprocessing.html#preprocessing.DropColumns">[docs]</a><span class="k">class</span> <span class="nc">DropColumns</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
@@ -816,64 +817,6 @@
         <span class="n">check_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
 
         <span class="n">Xt</span><span class="p">[</span><span class="s1">&#39;NaN_Totals&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xt</span><span class="p">[</span><span class="n">check_columns</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">Xt</span></div></div>
-
-
-<div class="viewcode-block" id="StandardizeData"><a class="viewcode-back" href="../preprocessing.html#preprocessing.StandardizeData">[docs]</a><span class="k">class</span> <span class="nc">StandardizeData</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Standardize datasets to have mean = 0 and std = 1.\</span>
-<span class="sd">    Note this will only standardize numerical data\</span>
-<span class="sd">    and ignore missing values during computation.\</span>
-<span class="sd">    Deprecated in version 1.1.0 and will be removed in \</span>
-<span class="sd">    version 1.3.0. Please use StandardScaling instead.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated in version 1.1.0 and will be</span><span class="se">\</span>
-<span class="s2"> removed in version 1.3.0. Please use StandardScaling instead.&quot;</span>
-<span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
-
-<div class="viewcode-block" id="StandardizeData.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.StandardizeData.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fit transformer to get mean and std for each\</span>
-<span class="sd">        numerical features.</span>
-
-<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
-<span class="sd">        :param pandas.Series y: Ignored. (default=None)</span>
-<span class="sd">        :return: fitted object (self)</span>
-<span class="sd">        :rtype: object</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean_</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dic_std_</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dic_std_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span></div>
-
-<div class="viewcode-block" id="StandardizeData.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.StandardizeData.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Transform by subtracting mean and dividing by std.</span>
-
-<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
-<span class="sd">        :return: Transformed input DataFrame</span>
-<span class="sd">        :rtype: pandas.DataFrame</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-
-        <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        
-        <span class="n">standardize_columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_columns_</span><span class="p">,</span> <span class="n">Xt</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">standardize_columns</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_std_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">pass</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Xt</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_mean_</span><span class="p">[</span><span class="n">col</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic_std_</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
-        
         <span class="k">return</span> <span class="n">Xt</span></div></div>
 
 
@@ -1657,7 +1600,7 @@
         <span class="k">return</span> <span class="n">Xt</span></div></div>
 
 
-<div class="viewcode-block" id="ArithmeticFeatureGenerator"><a class="viewcode-back" href="../preprocessing.html#preprocessing.ArithmeticFeatureGenerator">[docs]</a><span class="k">class</span> <span class="nc">ArithmeticFeatureGenerator</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="AppendArithmeticFeatures"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendArithmeticFeatures">[docs]</a><span class="k">class</span> <span class="nc">AppendArithmeticFeatures</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A transformer which recognizes all numerical features and create\</span>
 <span class="sd">    new features by arithmetic operation. Newly created features\</span>
@@ -1703,7 +1646,7 @@
         <span class="k">if</span> <span class="n">df</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Please impute missing values before using this transformer.&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ArithmeticFeatureGenerator.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.ArithmeticFeatureGenerator.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="AppendArithmeticFeatures.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendArithmeticFeatures.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fit transformer by fitting each feature with Logistic\</span>
 <span class="sd">        Regression and storing features with eval metrics higher\</span>
@@ -1750,7 +1693,7 @@
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="ArithmeticFeatureGenerator.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.ArithmeticFeatureGenerator.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<div class="viewcode-block" id="AppendArithmeticFeatures.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.AppendArithmeticFeatures.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Transform X by creating new feature using pairs identified during fit.</span>
 
@@ -2160,6 +2103,62 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">drop_columns</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">Xt</span></div></div>
+
+
+<div class="viewcode-block" id="UnionAppend"><a class="viewcode-back" href="../preprocessing.html#preprocessing.UnionAppend">[docs]</a><span class="k">class</span> <span class="nc">UnionAppend</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Concatenates features extracted from original input data by AppendXXX\</span>
+<span class="sd">    in the DataLiner package. Normally by applying AppendXXX in pipeline\</span>
+<span class="sd">    input data will be treated in series and therefore appended feature\</span>
+<span class="sd">    will be used in the next AppendXXX. By wrapping list of AppendXXX with\</span>
+<span class="sd">    this class, append features will be processed in parallel and therefore\</span>
+<span class="sd">    each AppendXXX class will only use the original input features.</span>
+
+<span class="sd">    :param list append_list: List of AppendXXX in DataLiner package. \</span>
+<span class="sd">    (default=None)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">append_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append_list</span> <span class="o">=</span> <span class="n">append_list</span>
+
+<div class="viewcode-block" id="UnionAppend.fit"><a class="viewcode-back" href="../preprocessing.html#preprocessing.UnionAppend.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit transformer by verifying AppendXXX specified.</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :param pandas.Series y: Ignored. (default=None)</span>
+<span class="sd">        :return: fitted object (self)</span>
+<span class="sd">        :rtype: object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append_list_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">append_list</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">append_list_</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Please specify list of AppendXXX from DataLiner class.&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">trans</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">append_list_</span><span class="p">:</span>
+            <span class="n">trans</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UnionAppend.transform"><a class="viewcode-back" href="../preprocessing.html#preprocessing.UnionAppend.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transform X by transforming X in parallel and appending to original input data.</span>
+
+<span class="sd">        :param pandas.DataFrame X: Input dataframe</span>
+<span class="sd">        :return: Transformed input DataFrame</span>
+<span class="sd">        :rtype: pandas.DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">_check_X</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">Xt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">trans</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">append_list_</span><span class="p">:</span>
+            <span class="n">X_ap</span> <span class="o">=</span> <span class="n">trans</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="n">append_col</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">setdiff1d</span><span class="p">(</span><span class="n">X_ap</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+            <span class="n">Xt</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">Xt</span><span class="p">,</span> <span class="n">X_ap</span><span class="p">[</span><span class="n">append_col</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Xt</span></div></div>
 </pre></div>
 
            </div>

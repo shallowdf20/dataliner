@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -186,65 +186,77 @@ process.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.CountRowNaN" title="preprocessing.CountRowNaN"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountRowNaN</span></code></a>()</p></td>
 <td><p>Calculates total number of NaN in a row and create a new column to store the total.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.StandardizeData" title="preprocessing.StandardizeData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StandardizeData</span></code></a>()</p></td>
-<td><p>Standardize datasets to have mean = 0 and std = 1.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.ClipData" title="preprocessing.ClipData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ClipData</span></code></a>([threshold])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.ClipData" title="preprocessing.ClipData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ClipData</span></code></a>([threshold])</p></td>
 <td><p>Clip datasets by replacing values larger than    the upper bound with upper bound and lower than     the lower bound by lower bound.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.GroupRareCategory" title="preprocessing.GroupRareCategory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GroupRareCategory</span></code></a>([threshold])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.GroupRareCategory" title="preprocessing.GroupRareCategory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GroupRareCategory</span></code></a>([threshold])</p></td>
 <td><p>Replace rare categories that appear in categorical columns    with dummy string.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.TargetMeanEncoding" title="preprocessing.TargetMeanEncoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TargetMeanEncoding</span></code></a>([k, f, smoothing])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.TargetMeanEncoding" title="preprocessing.TargetMeanEncoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TargetMeanEncoding</span></code></a>([k, f, smoothing])</p></td>
 <td><p>Target Mean Encoding of categorical variables.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.StandardScaling" title="preprocessing.StandardScaling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StandardScaling</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.StandardScaling" title="preprocessing.StandardScaling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StandardScaling</span></code></a>()</p></td>
 <td><p>Standardize datasets to have mean = 0 and std = 1.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.MinMaxScaling" title="preprocessing.MinMaxScaling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MinMaxScaling</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.MinMaxScaling" title="preprocessing.MinMaxScaling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MinMaxScaling</span></code></a>()</p></td>
 <td><p>Rescale the fit data into range between 0 and 1.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.CountEncoding" title="preprocessing.CountEncoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountEncoding</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.CountEncoding" title="preprocessing.CountEncoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountEncoding</span></code></a>()</p></td>
 <td><p>Encode categorical variables by the count of category    within the categorical column.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.RankedCountEncoding" title="preprocessing.RankedCountEncoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedCountEncoding</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.RankedCountEncoding" title="preprocessing.RankedCountEncoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedCountEncoding</span></code></a>()</p></td>
 <td><p>Firstly encode categorical variables by the count of category    within the categorical column.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.FrequencyEncoding" title="preprocessing.FrequencyEncoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FrequencyEncoding</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.FrequencyEncoding" title="preprocessing.FrequencyEncoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FrequencyEncoding</span></code></a>()</p></td>
 <td><p>Encode categorical variables by the frequency of category    within the categorical column.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.RankedTargetMeanEncoding" title="preprocessing.RankedTargetMeanEncoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedTargetMeanEncoding</span></code></a>([k, f, smoothing])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.RankedTargetMeanEncoding" title="preprocessing.RankedTargetMeanEncoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedTargetMeanEncoding</span></code></a>([k, f, smoothing])</p></td>
 <td><p>Ranking with Target Mean Encoding of categorical variables.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.AppendAnomalyScore" title="preprocessing.AppendAnomalyScore"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppendAnomalyScore</span></code></a>([n_estimators, random_state])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.AppendAnomalyScore" title="preprocessing.AppendAnomalyScore"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppendAnomalyScore</span></code></a>([n_estimators, random_state])</p></td>
 <td><p>Append anomaly score calculated from isolation forest.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.AppendCluster" title="preprocessing.AppendCluster"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppendCluster</span></code></a>([n_clusters, random_state])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.AppendCluster" title="preprocessing.AppendCluster"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppendCluster</span></code></a>([n_clusters, random_state])</p></td>
 <td><p>Append cluster number obtained from kmeans++ clustering.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.AppendClusterDistance" title="preprocessing.AppendClusterDistance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppendClusterDistance</span></code></a>([n_clusters, random_state])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.AppendClusterDistance" title="preprocessing.AppendClusterDistance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppendClusterDistance</span></code></a>([n_clusters, random_state])</p></td>
 <td><p>Append cluster distance obtained from kmeans++ clustering.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.AppendPrincipalComponent" title="preprocessing.AppendPrincipalComponent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppendPrincipalComponent</span></code></a>([n_components, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.AppendPrincipalComponent" title="preprocessing.AppendPrincipalComponent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppendPrincipalComponent</span></code></a>([n_components, …])</p></td>
 <td><p>Append principal components obtained from PCA.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.ArithmeticFeatureGenerator" title="preprocessing.ArithmeticFeatureGenerator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ArithmeticFeatureGenerator</span></code></a>([max_features, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.AppendArithmeticFeatures" title="preprocessing.AppendArithmeticFeatures"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppendArithmeticFeatures</span></code></a>([max_features, …])</p></td>
 <td><p>A transformer which recognizes all numerical features and create    new features by arithmetic operation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.RankedEvaluationMetricEncoding" title="preprocessing.RankedEvaluationMetricEncoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedEvaluationMetricEncoding</span></code></a>([metric])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.RankedEvaluationMetricEncoding" title="preprocessing.RankedEvaluationMetricEncoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedEvaluationMetricEncoding</span></code></a>([metric])</p></td>
 <td><p>Encode categorical columns by firstly creating dummy variable, then    LogisticRegression against target variable is fitted    for each of the dummy variables.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.AppendClassificationModel" title="preprocessing.AppendClassificationModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppendClassificationModel</span></code></a>([model, probability])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.AppendClassificationModel" title="preprocessing.AppendClassificationModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppendClassificationModel</span></code></a>([model, probability])</p></td>
 <td><p>Append prediction from model as a new feature.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.AppendEncoder" title="preprocessing.AppendEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppendEncoder</span></code></a>([encoder])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.AppendEncoder" title="preprocessing.AppendEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppendEncoder</span></code></a>([encoder])</p></td>
 <td><p>Append encoders in the DataLiner module.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.AppendClusterTargetMean" title="preprocessing.AppendClusterTargetMean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppendClusterTargetMean</span></code></a>([n_clusters, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.AppendClusterTargetMean" title="preprocessing.AppendClusterTargetMean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppendClusterTargetMean</span></code></a>([n_clusters, …])</p></td>
 <td><p>Append cluster number obtained from kmeans++ clustering.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.PermutationImportanceTest" title="preprocessing.PermutationImportanceTest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PermutationImportanceTest</span></code></a>([threshold])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.PermutationImportanceTest" title="preprocessing.PermutationImportanceTest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PermutationImportanceTest</span></code></a>([threshold])</p></td>
 <td><p>Conduct permutation importance tests on features and drop features    that are not effective.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.UnionAppend" title="preprocessing.UnionAppend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UnionAppend</span></code></a>([append_list])</p></td>
+<td><p>Concatenates features extracted from original input data by AppendXXX    in the DataLiner package.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Functions</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.load_titanic" title="preprocessing.load_titanic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_titanic</span></code></a>()</p></td>
+<td><p>Load train and test data for titanic datasets.</p></td>
 </tr>
 </tbody>
 </table>
@@ -799,65 +811,6 @@ a new column to store the total.</p>
 <dt id="preprocessing.CountRowNaN.transform">
 <code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#CountRowNaN.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.CountRowNaN.transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transform by checking for columns that exists in both        the fitting and transforming stage. Then adds up number of        missing values in row direction.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Transformed input DataFrame</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>pandas.DataFrame</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="preprocessing.StandardizeData">
-<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">StandardizeData</code><a class="reference internal" href="_modules/preprocessing.html#StandardizeData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.StandardizeData" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
-<p>Standardize datasets to have mean = 0 and std = 1.    Note this will only standardize numerical data    and ignore missing values during computation.    Deprecated in version 1.1.0 and will be removed in     version 1.3.0. Please use StandardScaling instead.</p>
-<p><strong>Methods</strong></p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.StandardizeData.fit" title="preprocessing.StandardizeData.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
-<td><p>Fit transformer to get mean and std for each        numerical features.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.StandardizeData.transform" title="preprocessing.StandardizeData.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
-<td><p>Transform by subtracting mean and dividing by std.</p></td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="preprocessing.StandardizeData.fit">
-<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#StandardizeData.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.StandardizeData.fit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fit transformer to get mean and std for each        numerical features.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p></li>
-<li><p><strong>y</strong> (<em>pandas.Series</em>) – Ignored. (default=None)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>fitted object (self)</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>object</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="preprocessing.StandardizeData.transform">
-<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#StandardizeData.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.StandardizeData.transform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Transform by subtracting mean and dividing by std.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
@@ -1701,8 +1654,8 @@ a new column to store the total.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="preprocessing.ArithmeticFeatureGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">ArithmeticFeatureGenerator</code><span class="sig-paren">(</span><em class="sig-param">max_features=50</em>, <em class="sig-param">metric='roc_auc'</em>, <em class="sig-param">operation='multiply'</em>, <em class="sig-param">replace_zero=0.001</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#ArithmeticFeatureGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.ArithmeticFeatureGenerator" title="Permalink to this definition">¶</a></dt>
+<dt id="preprocessing.AppendArithmeticFeatures">
+<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">AppendArithmeticFeatures</code><span class="sig-paren">(</span><em class="sig-param">max_features=50</em>, <em class="sig-param">metric='roc_auc'</em>, <em class="sig-param">operation='multiply'</em>, <em class="sig-param">replace_zero=0.001</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#AppendArithmeticFeatures"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.AppendArithmeticFeatures" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
 <p>A transformer which recognizes all numerical features and create    new features by arithmetic operation. Newly created features    are evaluated individually by fitting Logistic Regression against    the target variable and only new features with higher eval metric than feature    pairs will be newly added to the data. Missing values need to be    imputed beforehand.</p>
 <dl class="field-list simple">
@@ -1722,17 +1675,17 @@ a new column to store the total.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.ArithmeticFeatureGenerator.fit" title="preprocessing.ArithmeticFeatureGenerator.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.AppendArithmeticFeatures.fit" title="preprocessing.AppendArithmeticFeatures.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
 <td><p>Fit transformer by fitting each feature with Logistic        Regression and storing features with eval metrics higher        than the max of existing features.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.ArithmeticFeatureGenerator.transform" title="preprocessing.ArithmeticFeatureGenerator.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.AppendArithmeticFeatures.transform" title="preprocessing.AppendArithmeticFeatures.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
 <td><p>Transform X by creating new feature using pairs identified during fit.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
-<dt id="preprocessing.ArithmeticFeatureGenerator.fit">
-<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#ArithmeticFeatureGenerator.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.ArithmeticFeatureGenerator.fit" title="Permalink to this definition">¶</a></dt>
+<dt id="preprocessing.AppendArithmeticFeatures.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#AppendArithmeticFeatures.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.AppendArithmeticFeatures.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit transformer by fitting each feature with Logistic        Regression and storing features with eval metrics higher        than the max of existing features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1751,8 +1704,8 @@ a new column to store the total.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="preprocessing.ArithmeticFeatureGenerator.transform">
-<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#ArithmeticFeatureGenerator.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.ArithmeticFeatureGenerator.transform" title="Permalink to this definition">¶</a></dt>
+<dt id="preprocessing.AppendArithmeticFeatures.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#AppendArithmeticFeatures.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.AppendArithmeticFeatures.transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transform X by creating new feature using pairs identified during fit.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2093,6 +2046,84 @@ a new column to store the total.</p>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="class">
+<dt id="preprocessing.UnionAppend">
+<em class="property">class </em><code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">UnionAppend</code><span class="sig-paren">(</span><em class="sig-param">append_list=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#UnionAppend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.UnionAppend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Concatenates features extracted from original input data by AppendXXX    in the DataLiner package. Normally by applying AppendXXX in pipeline    input data will be treated in series and therefore appended feature    will be used in the next AppendXXX. By wrapping list of AppendXXX with    this class, append features will be processed in parallel and therefore    each AppendXXX class will only use the original input features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>append_list</strong> (<em>list</em>) – List of AppendXXX in DataLiner package.     (default=None)</p>
+</dd>
+</dl>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#preprocessing.UnionAppend.fit" title="preprocessing.UnionAppend.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit transformer by verifying AppendXXX specified.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#preprocessing.UnionAppend.transform" title="preprocessing.UnionAppend.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</p></td>
+<td><p>Transform X by transforming X in parallel and appending to original input data.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="preprocessing.UnionAppend.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#UnionAppend.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.UnionAppend.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit transformer by verifying AppendXXX specified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p></li>
+<li><p><strong>y</strong> (<em>pandas.Series</em>) – Ignored. (default=None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fitted object (self)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="preprocessing.UnionAppend.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#UnionAppend.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.UnionAppend.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform X by transforming X in parallel and appending to original input data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>pandas.DataFrame</em>) – Input dataframe</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Transformed input DataFrame</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="preprocessing.load_titanic">
+<code class="sig-prename descclassname">preprocessing.</code><code class="sig-name descname">load_titanic</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/preprocessing.html#load_titanic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#preprocessing.load_titanic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load train and test data for titanic datasets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>train_features, train_target, test_features</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pandas.DataFrame, pandas.Series, pandas.DataFrame</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
